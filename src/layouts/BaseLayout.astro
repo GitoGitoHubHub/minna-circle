@@ -1,0 +1,30 @@
+---
+const { title = "MinnaCircle" } = Astro.props;
+---
+
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+  </head>
+  <body class="font-sans bg-gray-50 text-gray-800">
+    <header class="bg-white shadow-md p-4 mb-8">
+      <div class="max-w-5xl mx-auto flex justify-between items-center">
+        <h1 class="text-xl font-bold text-primary">MinnaCircle</h1>
+        <nav>
+          <a href="/" class="text-sm text-gray-600 hover:text-primary mr-4">ホーム</a>
+          <a href="/about" class="text-sm text-gray-600 hover:text-primary">このサイトについて</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-4">
+      <slot />
+    </main>
+
+    <footer class="mt-12 py-6 text-center text-sm text-gray-400">
+      &copy; {new Date().getFullYear()} MinnaCircle. All rights reserved.
+    </footer>
+  </body>
+</html>
