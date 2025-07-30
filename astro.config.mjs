@@ -1,5 +1,8 @@
-import { defineConfig } from "astro/config";
+// astro.config.mjs
+import { defineConfig } from 'astro/config';
+import tailwind from '@astrojs/tailwind';
 
 export default defineConfig({
-  output: "static",
+  integrations: [tailwind()],
+  output: 'static', // ←ここが超重要
 });
