@@ -13,6 +13,7 @@
     "tailwindcss": "^3.4.1",
     "@astrojs/tailwind": "^5.0.0",
     "@astrojs/i18n": "^1.0.0"
+    "@astrojs/vercel": "^latest"
   },
   "devDependencies": {
     "prettier": "^3.2.5"
