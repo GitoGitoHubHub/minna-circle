@@ -1,13 +1,12 @@
 ---
+import BaseLayout from "../layouts/BaseLayout.astro";
 ---
-
-<html lang="ja">
-  <head>
-    <meta charset="UTF-8" />
-    <title>MinnaCircle</title>
-  </head>
-  <body>
-    <h1>MinnaCircleへようこそ！</h1>
+<BaseLayout title="MinnaCircle | ホーム" lang="ja" description="みんなのサークルをつなぐコミュニティ">
+  <section class="space-y-3">
+    <h1 class="text-2xl font-bold">MinnaCircleへようこそ！</h1>
     <p>これは初期表示ページです。</p>
-  </body>
-</html>
+    <p class="text-sm">
+      English version is <a class="text-blue-600 underline" href="/en/">here</a>.
+    </p>
+  </section>
+</BaseLayout>
