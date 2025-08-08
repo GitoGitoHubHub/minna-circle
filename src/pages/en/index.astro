@@ -1,12 +1,18 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
+const canonical = "https://minna-circle.vercel.app/en/"; // 本番URLに置換
 ---
-<BaseLayout title="MinnaCircle | Home" lang="en" description="Community for circles and interests">
+<BaseLayout 
+  title="MinnaCircle | Home" 
+  lang="en" 
+  description="A community connecting everyone's circles" 
+  canonical={canonical}
+>
   <section class="space-y-3">
     <h1 class="text-2xl font-bold">Welcome to MinnaCircle!</h1>
-    <p>This is the initial page (English).</p>
+    <p>This is the initial display page.</p>
     <p class="text-sm">
-      日本語ページは <a class="text-blue-600 underline" href="/">こちら</a>。
+      日本語版は <a class="text-blue-600 underline" href="/">こちら</a>.
     </p>
   </section>
 </BaseLayout>
