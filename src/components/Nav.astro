@@ -1,0 +1,13 @@
+---
+const { lang = "ja" } = Astro.props;
+const isEN = lang === "en";
+const homeHref = isEN ? "/en/" : "/";
+const otherHref = isEN ? "/" : "/en/";
+const otherLabel = isEN ? "JP" : "EN";
+---
+<nav class="text-sm flex gap-4">
+  <a href={homeHref} class="hover:underline">
+    {isEN ? "Home" : "ホーム"}
+  </a>
+  <a href={otherHref} class="hover:underline">{otherLabel}</a>
+</nav>
