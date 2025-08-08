@@ -1,30 +1,34 @@
 ---
-const { title = "MinnaCircle" } = Astro.props;
+const { title = "Minna Circle", lang = "ja", description = "MinnaCircle" } = Astro.props;
 ---
-
-<html lang="ja">
+<!doctype html>
+<html lang={lang}>
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="description" content={description} />
     <title>{title}</title>
+    <!-- Tailwind を使っているのでベースはこれでOK -->
   </head>
-  <body class="font-sans bg-gray-50 text-gray-800">
-    <header class="bg-white shadow-md p-4 mb-8">
-      <div class="max-w-5xl mx-auto flex justify-between items-center">
-        <h1 class="text-xl font-bold text-primary">MinnaCircle</h1>
-        <nav>
-          <a href="/" class="text-sm text-gray-600 hover:text-primary mr-4">ホーム</a>
-          <a href="/about" class="text-sm text-gray-600 hover:text-primary">このサイトについて</a>
+  <body class="min-h-dvh text-gray-800">
+    <header class="bg-white shadow-sm">
+      <div class="max-w-5xl mx-auto flex items-center justify-between p-4">
+        <a href="/" class="font-bold">MinnaCircle</a>
+        <nav class="text-sm flex gap-4">
+          <a href="/" class="hover:underline">ホーム</a>
+          <a href="/en/" class="hover:underline">EN</a>
         </nav>
       </div>
     </header>
 
-    <main class="max-w-5xl mx-auto px-4">
+    <main class="max-w-5xl mx-auto p-6">
       <slot />
     </main>
 
-    <footer class="mt-12 py-6 text-center text-sm text-gray-400">
-      &copy; {new Date().getFullYear()} MinnaCircle. All rights reserved.
+    <footer class="border-t mt-10">
+      <div class="max-w-5xl mx-auto p-4 text-xs text-gray-500">
+        © {new Date().getFullYear()} MinnaCircle
+      </div>
     </footer>
   </body>
 </html>
