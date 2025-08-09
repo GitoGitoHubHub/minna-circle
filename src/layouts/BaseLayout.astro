@@ -1,50 +1,36 @@
 ---
-import Nav from "../components/Nav.astro";
-const {
-  title = "Minna Circle",
-  lang = "ja",
-  description = "MinnaCircle",
-  ogTitle = title,
-  ogDescription = description,
-  ogImage = "/og.png",   // 後で public に用意します
-  canonical = undefined,
-} = Astro.props;
-
-const url = canonical ?? new URL(Astro.request.url).href;
+const { title = "MinnaCircle", description = "", lang = "ja", canonical = "", ogImage = "/og.png" } = Astro.props;
 ---
-<!doctype html>
+
+<!DOCTYPE html>
 <html lang={lang}>
   <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <meta name="description" content={description} />
-    <link rel="canonical" href={url} />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
     <title>{title}</title>
+    <meta name="description" content={description} />
 
-    <!-- OG / Twitter -->
+    {canonical && <link rel="canonical" href={canonical} />}
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
-    <meta property="og:title" content={ogTitle} />
-    <meta property="og:description" content={ogDescription} />
+    <meta property="og:url" content={canonical} />
     <meta property="og:image" content={ogImage} />
-    <meta property="og:url" content={url} />
+
+    <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
   </head>
-  <body class="min-h-dvh text-gray-800">
-    <header class="bg-white shadow-sm">
-      <div class="max-w-5xl mx-auto flex items-center justify-between p-4">
-        <a href={lang === "en" ? "/en/" : "/"} class="font-bold">MinnaCircle</a>
-        <Nav lang={lang} />
-      </div>
-    </header>
-
-    <main class="max-w-5xl mx-auto p-6">
-      <slot />
-    </main>
-
-    <footer class="border-t mt-10">
-      <div class="max-w-5xl mx-auto p-4 text-xs text-gray-500">
-        © {new Date().getFullYear()} MinnaCircle
-      </div>
-    </footer>
+  <body>
+    <slot />
   </body>
 </html>
+
