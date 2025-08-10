@@ -29,7 +29,15 @@ const { title = "MinnaCircle", description = "", lang = "ja", canonical = "", og
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImage} />
   </head>
-  <body>
+  <body><!-- 例：BaseLayout の <body> 直下などに -->
+<nav class="p-3 flex gap-4 text-sm">
+  <a href="/">ホーム</a>
+  <a href="/members">Members</a>
+  <a href="/about">About</a>
+  <a href="/contact">Contact</a>
+  <a href="/en/">EN</a>
+</nav>
+
     <slot />
   </body>
 </html>
