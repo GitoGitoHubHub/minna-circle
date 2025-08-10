@@ -1,0 +1,12 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+const title = "About | MinnaCircle";
+const description = "MinnaCircle の紹介ページ";
+const canonical = "https://minna-circle.vercel.app/about";
+---
+<BaseLayout {title} {description} canonical={canonical} lang="ja">
+  <section class="space-y-3">
+    <h1 class="text-2xl font-bold">About</h1>
+    <p>MinnaCircle は、人と人のつながりを応援するコミュニティサイトです。</p>
+  </section>
+</BaseLayout>
