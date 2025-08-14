@@ -1,30 +1,7 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
-const title = "Contact | MinnaCircle";
-const description = "お問い合わせフォーム";
-const canonical = "https://minna-circle.vercel.app/contact";
 ---
-<BaseLayout {title} {description} canonical={canonical} lang="ja">
-  <section class="space-y-4">
-    <h1 class="text-2xl font-bold">お問い合わせ</h1>
-    <form
-      action="https://formspree.io/f/your-id"  <!-- ←あとで差し替え -->
-      method="POST"
-      class="space-y-3 max-w-md"
-    >
-      <label class="block">
-        <span class="text-sm">お名前</span>
-        <input name="name" required class="border rounded w-full p-2" />
-      </label>
-      <label class="block">
-        <span class="text-sm">メールアドレス</span>
-        <input name="email" type="email" required class="border rounded w-full p-2" />
-      </label>
-      <label class="block">
-        <span class="text-sm">メッセージ</span>
-        <textarea name="message" rows="5" required class="border rounded w-full p-2" />
-      </label>
-      <button class="bg-blue-600 text-white px-4 py-2 rounded">送信</button>
-    </form>
-  </section>
+<BaseLayout title="お問い合わせ | MinnaCircle" lang="ja">
+  <h1 class="text-2xl font-bold mb-2">お問い合わせ</h1>
+  <p>ご意見・ご質問はメールでお送りください。</p>
 </BaseLayout>
