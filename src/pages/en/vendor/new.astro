@@ -1,58 +1,75 @@
 ---
 import BaseLayout from "../../../layouts/BaseLayout.astro";
-
-// 公開後の正規URL（必要に応じて変更OK）
-const canonical = "https://minna-circle.vercel.app/en/vendor/new";
+const title = "Create a Circle";
+const desc = "Submit your circle’s basic information.";
 ---
-
-<BaseLayout title="Create a circle" lang="en" canonical={canonical}>
-  <section class="max-w-5xl mx-auto px-4 py-12">
-    <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight">
-      Create a Circle
-    </h1>
-    <p class="text-gray-600 mt-2">
-      Please enter the basic information of your circle. (This form is a demo.)
+<BaseLayout title={`MinnaCircle | ${title}`} lang="en" description={desc}>
+  <section class="max-w-4xl mx-auto py-10 px-4">
+    <h1 class="text-3xl font-bold mb-6">{title}</h1>
+    <p class="text-gray-600 mb-8">
+      Please fill out the basic information of your circle. (This is a demo form.)
     </p>
 
-    <div class="mt-8 rounded-xl border bg-white/60 backdrop-blur p-6">
-      <div class="space-y-6">
-        <div>
-          <label class="block text-sm font-medium mb-2" for="circle-name">Circle name</label>
-          <input
-            id="circle-name"
-            type="text"
-            placeholder="e.g. Minna Hiking Club"
-            class="w-full rounded-lg border px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black/10"
-          />
-        </div>
+    <form method="POST" action="/api/vendor/submit" class="space-y-6">
+      <input type="hidden" name="lang" value="en" />
 
-        <div>
-          <label class="block text-sm font-medium mb-2" for="circle-desc">Description</label>
-          <textarea
-            id="circle-desc"
-            rows="6"
-            placeholder="Write activities, recruitment conditions, etc."
-            class="w-full rounded-lg border px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black/10"
-          ></textarea>
-        </div>
-
-        <div class="flex gap-3">
-          <button
-            type="button"
-            class="rounded-lg bg-black text-white px-5 py-2.5 hover:opacity-90"
-          >
-            Save draft (demo)
-          </button>
-
-          <a
-            href="/en/"
-            class="rounded-lg border px-5 py-2.5 hover:bg-gray-50"
-          >
-            Back to Home
-          </a>
-        </div>
+      <div>
+        <label for="circleName" class="block text-sm font-medium text-gray-700 mb-1">Circle Name</label>
+        <input
+          id="circleName"
+          name="circleName"
+          type="text"
+          required
+          placeholder="e.g., MinnaCircle Hiking Club"
+          class="w-full rounded-md border px-3 py-2 focus:outline-none focus:ring"
+        />
       </div>
-    </div>
+
+      <div>
+        <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+        <textarea
+          id="description"
+          name="description"
+          required
+          placeholder="Tell us about your activities and recruitment details (10+ characters)."
+          rows="6"
+          class="w-full rounded-md border px-3 py-2 focus:outline-none focus:ring"
+        ></textarea>
+      </div>
+
+      <div>
+        <label for="email" class="block text-sm font-medium text-gray-700 mb-1">
+          Contact Email (optional)
+        </label>
+        <input
+          id="email"
+          name="email"
+          type="email"
+          placeholder="your@email.com"
+          class="w-full rounded-md border px-3 py-2 focus:outline-none focus:ring"
+        />
+      </div>
+
+      {
+        Astro.url.searchParams.has("err") && (
+          <p class="text-red-600 text-sm">
+            Some fields are invalid ({Astro.url.searchParams.get("err")}).
+          </p>
+        )
+      }
+
+      <div class="flex gap-3">
+        <button
+          type="submit"
+          class="px-5 py-2 rounded-md bg-black text-white hover:opacity-90"
+        >
+          Submit
+        </button>
+
+        <a href="/en/" class="px-5 py-2 rounded-md border hover:bg-gray-50">
+          Back to Home
+        </a>
+      </div>
+    </form>
   </section>
 </BaseLayout>
-
