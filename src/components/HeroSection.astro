@@ -1,64 +1,44 @@
 ---
-// src/components/HeroSection.astro
-
-interface Props {
-  lang?: "ja" | "en";
-  title?: string;
-  subtitle?: string;
-  ctaPrimaryHref?: string;
-  ctaPrimaryLabel?: string;
-  ctaSecondaryHref?: string;
-  ctaSecondaryLabel?: string;
-}
-
 const {
   lang = "ja",
-  title = lang === "en"
-    ? "Find your circle. Meet your people."
-    : "趣味でつながる、仲間が見つかる。",
-  subtitle = lang === "en"
-    ? "Search circles, join activities, and create your own community."
-    : "サークルを探す、活動に参加する、あなたのコミュニティをつくる。",
+  title =
+    lang === "en"
+      ? "Find your circle. Meet your people."
+      : "趣味でつながる、仲間が見つかる。",
+  subtitle =
+    lang === "en"
+      ? "Search circles, join activities, and create your own community."
+      : "サークルを探す、活動に参加する、あなたのコミュニティをつくる。",
   ctaPrimaryHref = lang === "en" ? "/en/search" : "/search",
   ctaPrimaryLabel = lang === "en" ? "Search circles" : "サークルを探す",
   ctaSecondaryHref = lang === "en" ? "/en/vendor/new" : "/vendor/new",
   ctaSecondaryLabel = lang === "en" ? "Create a circle" : "サークルを作る",
-} = Astro.props as Props;
+} = Astro.props;
 ---
 
 <section class="py-10 md:py-16">
-  <div class="mx-auto grid max-w-5xl items-center gap-6 md:grid-cols-2">
+  <div class="max-w-5xl mx-auto grid gap-6 md:grid-cols-2 items-center">
     <div class="space-y-4">
-      <h1 class="text-3xl font-extrabold leading-tight md:text-4xl">
+      <h1 class="text-3xl md:text-4xl font-extrabold leading-tight">
         {title}
       </h1>
       <p class="text-gray-600">{subtitle}</p>
-
-      <div class="pt-2 flex gap-3">
-        <a
-          href={ctaPrimaryHref}
-          class="rounded-lg bg-black px-4 py-2 text-white hover:opacity-90 focus:outline-none focus-visible:ring"
-          aria-label={ctaPrimaryLabel}
-        >
+      <div class="flex gap-3 pt-2">
+        <a href={ctaPrimaryHref} class="px-4 py-2 rounded-lg bg-black text-white hover:opacity-90">
           {ctaPrimaryLabel}
         </a>
-        <a
-          href={ctaSecondaryHref}
-          class="rounded-lg border border-gray-300 px-4 py-2 hover:bg-gray-50 focus:outline-none focus-visible:ring"
-          aria-label={ctaSecondaryLabel}
-        >
+        <a href={ctaSecondaryHref} class="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50">
           {ctaSecondaryLabel}
         </a>
       </div>
     </div>
 
     <div class="rounded-2xl border bg-gradient-to-br from-gray-50 to-white p-4 md:p-6">
-      <figure
-        class="flex aspect-[4/3] w-full items-center justify-center rounded-xl border text-gray-400"
-      >
-        <!-- あとでイラスト/画像に差し替え（例: <img src="/og.png" alt="MinnaCircle" class="h-full w-full object-cover rounded-xl" loading="lazy" />） -->
-        <figcaption>{lang === "en" ? "Hero Image" : "ヒーロー画像"}</figcaption>
-      </figure>
+      <div class="aspect-[4/3] w-full rounded-xl border flex items-center justify-center text-gray-400">
+        <!-- ここに後でイラストやOG画像を差し替え -->
+        <span>{lang === "en" ? "Hero Image" : "ヒーロー画像"}</span>
+      </div>
     </div>
   </div>
 </section>
+
