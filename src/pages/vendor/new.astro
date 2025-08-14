@@ -1,11 +1,42 @@
 ---
+// NOTE: ここは vendor/new.astro（= src/pages/vendor/new.astro）です
+// layouts は src/layouts 配下なので、vendor からは "../.." で src まで戻る必要があります。
 import BaseLayout from "../../layouts/BaseLayout.astro";
-const title = "サークルを作る";
-const lang = "ja";
+
+const canonical = "https://minna-circle.vercel.app/vendor/new";
 ---
-<BaseLayout title={`MinnaCircle | ${title}`} lang={lang}>
-  <section class="space-y-3">
-    <h1 class="text-2xl font-bold">{title}</h1>
-    <p>このページは準備中です。</p>
+
+<BaseLayout
+  title="サークルを作る | MinnaCircle"
+  description="新しいサークルを作成して、仲間を募集しましょう。"
+  lang="ja"
+  canonical={canonical}
+>
+  <section class="max-w-4xl mx-auto space-y-6 py-10">
+    <h1 class="text-2xl md:text-3xl font-bold">サークルを作る</h1>
+    <p class="text-gray-600">
+      まずはサークルの基本情報を入力してください（このフォームはダミーです）。
+    </p>
+
+    <form class="space-y-4 rounded-xl border p-5 bg-white">
+      <label class="block">
+        <span class="text-sm text-gray-700">サークル名</span>
+        <input class="mt-1 w-full rounded-md border px-3 py-2" placeholder="例）ミナサー登山部" />
+      </label>
+
+      <label class="block">
+        <span class="text-sm text-gray-700">紹介文</span>
+        <textarea class="mt-1 w-full rounded-md border px-3 py-2" rows="4" placeholder="活動内容や募集条件などを書いてください"></textarea>
+      </label>
+
+      <div class="flex gap-3">
+        <button type="button" class="px-4 py-2 rounded-lg bg-black text-white hover:opacity-90">
+          下書き保存（ダミー）
+        </button>
+        <a href="/" class="px-4 py-2 rounded-lg border hover:bg-gray-50">
+          ホームへ戻る
+        </a>
+      </div>
+    </form>
   </section>
 </BaseLayout>
