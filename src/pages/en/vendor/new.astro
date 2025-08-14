@@ -1,42 +1,57 @@
 ---
-// NOTE: ここは en/vendor/new.astro（= src/pages/en/vendor/new.astro）です
-// src/layouts へは「../../../」で戻ります（vendor -> en -> pages -> src）。
-import BaseLayout from "../../../layouts/BaseLayout.astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
 
+// 公開後の正規URL（必要に応じてあなたのドメインに変更OK）
 const canonical = "https://minna-circle.vercel.app/en/vendor/new";
 ---
 
-<BaseLayout
-  title="Create a Circle | MinnaCircle"
-  description="Create a new circle and start gathering members."
-  lang="en"
-  canonical={canonical}
->
-  <section class="max-w-4xl mx-auto space-y-6 py-10">
-    <h1 class="text-2xl md:text-3xl font-bold">Create a Circle</h1>
-    <p class="text-gray-600">
-      Please fill in the basic information (this form is a demo).
+<BaseLayout title="Create a circle" lang="en" canonical={canonical}>
+  <section class="max-w-5xl mx-auto px-4 py-12">
+    <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight">
+      Create a Circle
+    </h1>
+    <p class="text-gray-600 mt-2">
+      Please enter the basic information of your circle. (This form is a demo.)
     </p>
 
-    <form class="space-y-4 rounded-xl border p-5 bg-white">
-      <label class="block">
-        <span class="text-sm text-gray-700">Circle name</span>
-        <input class="mt-1 w-full rounded-md border px-3 py-2" placeholder="e.g., MinnaCircle Hiking Club" />
-      </label>
+    <div class="mt-8 rounded-xl border bg-white/60 backdrop-blur p-6">
+      <div class="space-y-6">
+        <div>
+          <label class="block text-sm font-medium mb-2" for="circle-name">Circle name</label>
+          <input
+            id="circle-name"
+            type="text"
+            placeholder="e.g. Minna Hiking Club"
+            class="w-full rounded-lg border px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black/10"
+          />
+        </div>
 
-      <label class="block">
-        <span class="text-sm text-gray-700">Description</span>
-        <textarea class="mt-1 w-full rounded-md border px-3 py-2" rows="4" placeholder="What do you do? Who can join?"></textarea>
-      </label>
+        <div>
+          <label class="block text-sm font-medium mb-2" for="circle-desc">Description</label>
+          <textarea
+            id="circle-desc"
+            rows="6"
+            placeholder="Write activities, recruitment conditions, etc."
+            class="w-full rounded-lg border px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black/10"
+          ></textarea>
+        </div>
 
-      <div class="flex gap-3">
-        <button type="button" class="px-4 py-2 rounded-lg bg-black text-white hover:opacity-90">
-          Save draft (demo)
-        </button>
-        <a href="/en/" class="px-4 py-2 rounded-lg border hover:bg-gray-50">
-          Back to Home
-        </a>
+        <div class="flex gap-3">
+          <button
+            type="button"
+            class="rounded-lg bg-black text-white px-5 py-2.5 hover:opacity-90"
+          >
+            Save draft (demo)
+          </button>
+
+          <a
+            href="/en/"
+            class="rounded-lg border px-5 py-2.5 hover:bg-gray-50"
+          >
+            Back to Home
+          </a>
+        </div>
       </div>
-    </form>
+    </div>
   </section>
 </BaseLayout>
