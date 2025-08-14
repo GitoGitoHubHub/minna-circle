@@ -1,7 +1,42 @@
 ---
+// NOTE: ここは en/vendor/new.astro（= src/pages/en/vendor/new.astro）です
+// src/layouts へは「../../../」で戻ります（vendor -> en -> pages -> src）。
 import BaseLayout from "../../../layouts/BaseLayout.astro";
+
+const canonical = "https://minna-circle.vercel.app/en/vendor/new";
 ---
-<BaseLayout title="Create a circle | MinnaCircle" lang="en">
-  <h1 class="text-2xl font-bold mb-4">Create a circle (placeholder)</h1>
-  <p class="text-gray-600">A creation form will be implemented here.</p>
+
+<BaseLayout
+  title="Create a Circle | MinnaCircle"
+  description="Create a new circle and start gathering members."
+  lang="en"
+  canonical={canonical}
+>
+  <section class="max-w-4xl mx-auto space-y-6 py-10">
+    <h1 class="text-2xl md:text-3xl font-bold">Create a Circle</h1>
+    <p class="text-gray-600">
+      Please fill in the basic information (this form is a demo).
+    </p>
+
+    <form class="space-y-4 rounded-xl border p-5 bg-white">
+      <label class="block">
+        <span class="text-sm text-gray-700">Circle name</span>
+        <input class="mt-1 w-full rounded-md border px-3 py-2" placeholder="e.g., MinnaCircle Hiking Club" />
+      </label>
+
+      <label class="block">
+        <span class="text-sm text-gray-700">Description</span>
+        <textarea class="mt-1 w-full rounded-md border px-3 py-2" rows="4" placeholder="What do you do? Who can join?"></textarea>
+      </label>
+
+      <div class="flex gap-3">
+        <button type="button" class="px-4 py-2 rounded-lg bg-black text-white hover:opacity-90">
+          Save draft (demo)
+        </button>
+        <a href="/en/" class="px-4 py-2 rounded-lg border hover:bg-gray-50">
+          Back to Home
+        </a>
+      </div>
+    </form>
+  </section>
 </BaseLayout>
