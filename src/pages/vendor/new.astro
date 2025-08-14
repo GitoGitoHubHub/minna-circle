@@ -1,39 +1,73 @@
 ---
-// NOTE: ここは vendor/new.astro（= src/pages/vendor/new.astro）です
-// layouts は src/layouts 配下なので、vendor からは "../.." で src まで戻る必要があります。
 import BaseLayout from "../../layouts/BaseLayout.astro";
-
-const canonical = "https://minna-circle.vercel.app/vendor/new";
+const title = "サークルを作る";
+const desc = "サークルの基本情報を入力して登録申請します。";
 ---
-
-<BaseLayout
-  title="サークルを作る | MinnaCircle"
-  description="新しいサークルを作成して、仲間を募集しましょう。"
-  lang="ja"
-  canonical={canonical}
->
-  <section class="max-w-4xl mx-auto space-y-6 py-10">
-    <h1 class="text-2xl md:text-3xl font-bold">サークルを作る</h1>
-    <p class="text-gray-600">
-      まずはサークルの基本情報を入力してください（このフォームはダミーです）。
+<BaseLayout title={`MinnaCircle | ${title}`} lang="ja" description={desc}>
+  <section class="max-w-4xl mx-auto py-10 px-4">
+    <h1 class="text-3xl font-bold mb-6">{title}</h1>
+    <p class="text-gray-600 mb-8">
+      まずはサークルの基本情報を入力してください（このフォームはデモです）。
     </p>
 
-    <form class="space-y-4 rounded-xl border p-5 bg-white">
-      <label class="block">
-        <span class="text-sm text-gray-700">サークル名</span>
-        <input class="mt-1 w-full rounded-md border px-3 py-2" placeholder="例）ミナサー登山部" />
-      </label>
+    <form method="POST" action="/api/vendor/submit" class="space-y-6">
+      <input type="hidden" name="lang" value="ja" />
 
-      <label class="block">
-        <span class="text-sm text-gray-700">紹介文</span>
-        <textarea class="mt-1 w-full rounded-md border px-3 py-2" rows="4" placeholder="活動内容や募集条件などを書いてください"></textarea>
-      </label>
+      <div>
+        <label for="circleName" class="block text-sm font-medium text-gray-700 mb-1">サークル名</label>
+        <input
+          id="circleName"
+          name="circleName"
+          type="text"
+          required
+          placeholder="例）ミナサー登山部"
+          class="w-full rounded-md border px-3 py-2 focus:outline-none focus:ring"
+        />
+      </div>
+
+      <div>
+        <label for="description" class="block text-sm font-medium text-gray-700 mb-1">紹介文</label>
+        <textarea
+          id="description"
+          name="description"
+          required
+          placeholder="活動内容や募集条件などを書いてください（10文字以上）"
+          rows="6"
+          class="w-full rounded-md border px-3 py-2 focus:outline-none focus:ring"
+        ></textarea>
+      </div>
+
+      <div>
+        <label for="email" class="block text-sm font-medium text-gray-700 mb-1">
+          連絡先メール（任意）
+        </label>
+        <input
+          id="email"
+          name="email"
+          type="email"
+          placeholder="your@email.com"
+          class="w-full rounded-md border px-3 py-2 focus:outline-none focus:ring"
+        />
+      </div>
+
+      <!-- エラー表示（簡易版） -->
+      {
+        Astro.url.searchParams.has("err") && (
+          <p class="text-red-600 text-sm">
+            入力内容に不備があります（{Astro.url.searchParams.get("err")}）。
+          </p>
+        )
+      }
 
       <div class="flex gap-3">
-        <button type="button" class="px-4 py-2 rounded-lg bg-black text-white hover:opacity-90">
-          下書き保存（ダミー）
+        <button
+          type="submit"
+          class="px-5 py-2 rounded-md bg-black text-white hover:opacity-90"
+        >
+          送信する
         </button>
-        <a href="/" class="px-4 py-2 rounded-lg border hover:bg-gray-50">
+
+        <a href="/" class="px-5 py-2 rounded-md border hover:bg-gray-50">
           ホームへ戻る
         </a>
       </div>
