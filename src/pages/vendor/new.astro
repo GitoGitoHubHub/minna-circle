@@ -1,76 +1,96 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
-const title = "サークルを作る";
-const desc = "サークルの基本情報を入力して登録申請します。";
 ---
-<BaseLayout title={`MinnaCircle | ${title}`} lang="ja" description={desc}>
-  <section class="max-w-4xl mx-auto py-10 px-4">
-    <h1 class="text-3xl font-bold mb-6">{title}</h1>
+
+<BaseLayout title="サークルを作る | MinnaCircle" lang="ja">
+  <section class="max-w-4xl mx-auto px-4 py-10 md:py-14">
+    <h1 class="text-2xl md:text-3xl font-extrabold mb-6">サークルを作る</h1>
     <p class="text-gray-600 mb-8">
-      まずはサークルの基本情報を入力してください（このフォームはデモです）。
+      まずはサークルの基本情報を入力してください（このフォームはデモ送信です）。
     </p>
 
-    <form method="POST" action="/api/vendor/submit" class="space-y-6">
-      <input type="hidden" name="lang" value="ja" />
-
+    <form id="circleForm" class="space-y-6">
       <div>
-        <label for="circleName" class="block text-sm font-medium text-gray-700 mb-1">サークル名</label>
+        <label for="name" class="block text-sm font-medium mb-2">サークル名</label>
         <input
-          id="circleName"
-          name="circleName"
+          id="name"
+          name="name"
           type="text"
           required
           placeholder="例）ミナサー登山部"
-          class="w-full rounded-md border px-3 py-2 focus:outline-none focus:ring"
+          class="w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-black"
         />
       </div>
 
       <div>
-        <label for="description" class="block text-sm font-medium text-gray-700 mb-1">紹介文</label>
+        <label for="bio" class="block text-sm font-medium mb-2">紹介文</label>
         <textarea
-          id="description"
-          name="description"
-          required
-          placeholder="活動内容や募集条件などを書いてください（10文字以上）"
-          rows="6"
-          class="w-full rounded-md border px-3 py-2 focus:outline-none focus:ring"
+          id="bio"
+          name="bio"
+          rows={6}
+          placeholder="活動内容や募集条件などを書いてください"
+          class="w-full rounded-lg border px-3 py-2 outline-none focus:ring-2 focus:ring-black"
         ></textarea>
       </div>
 
-      <div>
-        <label for="email" class="block text-sm font-medium text-gray-700 mb-1">
-          連絡先メール（任意）
-        </label>
-        <input
-          id="email"
-          name="email"
-          type="email"
-          placeholder="your@email.com"
-          class="w-full rounded-md border px-3 py-2 focus:outline-none focus:ring"
-        />
-      </div>
-
-      <!-- エラー表示（簡易版） -->
-      {
-        Astro.url.searchParams.has("err") && (
-          <p class="text-red-600 text-sm">
-            入力内容に不備があります（{Astro.url.searchParams.get("err")}）。
-          </p>
-        )
-      }
-
       <div class="flex gap-3">
         <button
+          id="submitBtn"
           type="submit"
-          class="px-5 py-2 rounded-md bg-black text-white hover:opacity-90"
+          class="px-5 py-2 rounded-lg bg-black text-white hover:opacity-90 disabled:opacity-50"
         >
           送信する
         </button>
-
-        <a href="/" class="px-5 py-2 rounded-md border hover:bg-gray-50">
-          ホームへ戻る
-        </a>
+        <a href="/" class="px-5 py-2 rounded-lg border hover:bg-gray-50">ホームへ戻る</a>
       </div>
+
+      <p id="msg" class="text-sm pt-2"></p>
     </form>
   </section>
+
+  <script type="module">
+    const form = document.getElementById("circleForm");
+    const msg = document.getElementById("msg");
+    const btn = document.getElementById("submitBtn");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      msg.textContent = "";
+      btn.disabled = true;
+
+      const data = Object.fromEntries(new FormData(form).entries());
+
+      try {
+        const res = await fetch("/api/form", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
+
+        if (!res.ok) {
+          const txt = await res.text().catch(() => "");
+          throw new Error(txt || `送信に失敗しました（${res.status}）`);
+        }
+
+        // GAS 側が JSON を返す前提にあわせて
+        let resultText = "送信しました。";
+        try {
+          const json = await res.json();
+          if (json?.ok === false && json?.message) throw new Error(json.message);
+          resultText = json?.message || resultText;
+        } catch {
+          // JSON じゃなければ無視
+        }
+
+        msg.textContent = resultText;
+        msg.className = "text-sm pt-2 text-green-600";
+        form.reset();
+      } catch (err) {
+        msg.textContent = err.message || "送信に失敗しました。";
+        msg.className = "text-sm pt-2 text-red-600";
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  </script>
 </BaseLayout>
