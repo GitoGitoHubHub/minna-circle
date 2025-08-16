@@ -1,0 +1,188 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+/**
+ * ダミーデータ
+ *  - 既存のイベント例と整合するよう、木場公園・江東区スポーツセンター・清澄白河を用意
+ *  - 実データ接続時は API/DB 取得＋ getStaticPaths に差し替え
+ */
+const allPlaces = [
+  {
+    id: "pl-kiba-park",
+    name: "木場公園",
+    areaText: "江東区",
+    address: "東京都江東区木場",
+    description: "緑が多く、ランニングやストレッチに最適な都立公園。朝活イベントの定番スポット。",
+    image: "/og.png",
+    amenities: ["トイレ", "ランニングコース", "ベンチ", "自販機"],
+    openingHours: "06:00-21:00",
+    telephone: "",
+    url: "",
+    relatedEvents: [
+      { id: "ev-001", title: "朝活ランニング＠木場公園", dateText: "2025-09-01 07:00" }
+    ]
+  },
+  {
+    id: "pl-koto-sports",
+    name: "江東区スポーツセンター",
+    areaText: "江東区",
+    address: "東京都江東区北砂1-2-9",
+    description: "アリーナ・多目的室・トレーニング室などを備える公共スポーツ施設。",
+    image: "/og.png",
+    amenities: ["更衣室", "シャワー", "ロッカー", "駐輪場"],
+    openingHours: "09:00-22:00",
+    telephone: "03-XXXX-XXXX",
+    url: "",
+    relatedEvents: [
+      { id: "ev-002", title: "週末バスケ個人参加", dateText: "2025-09-06 18:00" }
+    ]
+  },
+  {
+    id: "pl-kiyosumi",
+    name: "清澄白河",
+    areaText: "江東区",
+    address: "東京都江東区清澄・白河エリア",
+    description: "コーヒーカルチャーで有名なエリア。カフェ会や英会話ミートアップが人気。",
+    image: "/og.png",
+    amenities: ["カフェ多数", "公園", "ギャラリー"],
+    openingHours: "",
+    telephone: "",
+    url: "",
+    relatedEvents: [
+      { id: "ev-003", title: "英会話ゆるカフェ会", dateText: "2025-09-07 10:00" }
+    ]
+  }
+];
+
+/** ルーティングパラメータ */
+const { id } = Astro.params;
+
+/** 本来はAPI/DBから取得 */
+const place = allPlaces.find((p) => p.id === id);
+if (!place) {
+  throw Astro.redirect("/404");
+}
+
+/** メタ */
+const pageTitle = `${place.name} | MinnaCircle`;
+const pageDesc  = place.description ?? `${place.name} の会場情報`;
+
+/** サイトURL（astro.configのsiteがあれば使用） */
+const siteUrl = (Astro.site && Astro.site.href) ? Astro.site.href.replace(/\/$/, "") : "";
+
+/** JSON-LD: Place */
+const placeLd = {
+  "@context": "https://schema.org",
+  "@type": "Place",
+  "name": place.name,
+  "description": place.description,
+  ...(siteUrl ? { "url": `${siteUrl}/places/${place.id}` } : {}),
+  "image": place.image,
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": place.address,
+    "addressLocality": place.areaText,
+    "addressCountry": "JP"
+  },
+  ...(place.telephone ? { "telephone": place.telephone } : {}),
+  ...(place.openingHours ? { "openingHours": place.openingHours } : {})
+};
+
+/** JSON-LD: パンくず */
+const breadcrumbLd = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home",    ...(siteUrl ? { "item": siteUrl } : {}) },
+    { "@type": "ListItem", "position": 2, "name": "Places",  ...(siteUrl ? { "item": `${siteUrl}/places` } : {}) },
+    { "@type": "ListItem", "position": 3, "name": place.name, ...(siteUrl ? { "item": `${siteUrl}/places/${place.id}` } : {}) }
+  ]
+};
+---
+
+<BaseLayout title={pageTitle} lang="ja" meta_description={pageDesc}>
+  <!-- JSON-LD -->
+  <script type="application/ld+json">{JSON.stringify(placeLd)}</script>
+  <script type="application/ld+json">{JSON.stringify(breadcrumbLd)}</script>
+
+  <section class="max-w-5xl mx-auto px-4 py-8 md:py-12">
+    <!-- パンくず / タイトル -->
+    <div class="mb-6">
+      <nav class="text-xs text-gray-500 mb-2">
+        <a class="hover:underline" href="/">Home</a> /
+        <a class="hover:underline" href="/places">Places</a> /
+        <span>{place.name}</span>
+      </nav>
+      <h1 class="text-2xl md:text-4xl font-extrabold">{place.name}</h1>
+      <div class="mt-2 flex flex-wrap gap-2 text-sm text-gray-600">
+        <span>📍 エリア: {place.areaText}</span>
+        {place.openingHours && <span>・🕘 営業時間: {place.openingHours}</span>}
+        {place.telephone && <span>・📞 {place.telephone}</span>}
+      </div>
+    </div>
+
+    <!-- メイン 2カラム -->
+    <div class="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-6">
+      <!-- 左：会場情報 -->
+      <article class="bg-white rounded-2xl shadow p-5 md:p-7">
+        <img src={place.image} alt={place.name} class="rounded-xl w-full h-56 object-cover mb-4" loading="lazy" />
+
+        <h2 class="text-lg md:text-xl font-bold mb-2">概要</h2>
+        <p class="text-gray-700 leading-relaxed">{place.description}</p>
+
+        <h3 class="mt-6 font-semibold">所在地</h3>
+        <p class="text-sm text-gray-700">{place.address}</p>
+
+        {place.amenities?.length > 0 && (
+          <>
+            <h3 class="mt-6 font-semibold">設備・特徴</h3>
+            <div class="mt-2 flex flex-wrap gap-2">
+              {place.amenities.map((a) => (
+                <span class="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-xs">{a}</span>
+              ))}
+            </div>
+          </>
+        )}
+
+        <div class="mt-6 flex gap-3">
+          <a href="/search?type=event&q=%E6%B1%9F%E6%9D%B1%E5%8C%BA" class="bg-indigo-600 text-white px-5 py-2 rounded-xl shadow hover:bg-indigo-700 transition">
+            このエリアのイベントを探す
+          </a>
+          <a href="/search?type=circle" class="px-5 py-2 rounded-xl border hover:bg-gray-50 transition">
+            サークル一覧を見る
+          </a>
+        </div>
+      </article>
+
+      <!-- 右：関連情報 -->
+      <aside class="space-y-4">
+        <div class="bg-white rounded-2xl shadow p-5">
+          <h3 class="font-semibold mb-2">関連イベント</h3>
+          {place.relatedEvents?.length > 0 ? (
+            <ul class="text-sm text-indigo-700 space-y-2">
+              {place.relatedEvents.map((ev) => (
+                <li>
+                  <a class="underline" href={`/events/${ev.id}`}>{ev.title}</a>
+                  <span class="text-gray-500 ml-2">{ev.dateText}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p class="text-sm text-gray-600">関連イベントはありません。</p>
+          )}
+        </div>
+
+        <div class="bg-white rounded-2xl shadow p-5">
+          <h3 class="font-semibold mb-2">外部リンク</h3>
+          {place.url ? (
+            <a class="text-indigo-700 underline text-sm" href={place.url} rel="noopener">公式サイト</a>
+          ) : (
+            <p class="text-sm text-gray-600">公式サイト情報は未登録です。</p>
+          )}
+        </div>
+
+        <a href="/" class="block text-center text-indigo-700 underline">トップへ戻る</a>
+      </aside>
+    </div>
+  </section>
+</BaseLayout>
