@@ -1,0 +1,30 @@
+---
+import CardBase from "./CardBase.astro";
+const { circle } = Astro.props;
+/**
+ * circle オブジェクト想定例:
+ * {
+ *   id: "cl-001",
+ *   name: "ミンナでバスケ",
+ *   intro: "初心者～経験者まで幅広く。試合より交流重視！",
+ *   image: "/og.png",
+ *   memberCount: 42,
+ *   areaText: "江東区・墨田区",
+ *   isPickup: true
+ * }
+ */
+---
+
+<CardBase
+  image={circle?.image}
+  title={circle?.name}
+  description={circle?.intro}
+  tags={[circle?.isPickup ? "ピックアップ" : "サークル"]}
+  meta={[
+    `👥 メンバー ${circle?.memberCount ?? 0}`,
+    `📍 活動エリア: ${circle?.areaText ?? ""}`
+  ]}
+  actions={[
+    { href: `/circles/${circle?.id}`, label: "詳細を見る", primary: true }
+  ]}
+/>
