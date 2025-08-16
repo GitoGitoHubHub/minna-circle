@@ -1,7 +1,37 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 ---
-<BaseLayout title="メンバー | MinnaCircle" lang="ja">
-  <h1 class="text-2xl font-bold mb-2">メンバー</h1>
-  <p>ここにメンバー一覧やプロフィールなどを配置していきます。</p>
+
+<BaseLayout
+  title="メンバー | MinnaCircle"
+  description="MinnaCircleの参加メンバー一覧ページです。"
+  path="/members"
+  lang="ja"
+>
+  <section class="max-w-4xl mx-auto px-4 py-10">
+    <h1 class="text-2xl md:text-3xl font-bold mb-6">メンバー</h1>
+
+    <p class="mb-6 text-gray-600">
+      ここにメンバー一覧や検索UIが入ります（まずはダミーデータ）。
+    </p>
+
+    <ul class="grid gap-4 sm:grid-cols-2">
+      <li class="border rounded p-4">
+        <h2 class="font-semibold">山田 太郎</h2>
+        <p class="text-sm text-gray-600">ランニング / さいたま</p>
+      </li>
+      <li class="border rounded p-4">
+        <h2 class="font-semibold">佐藤 花子</h2>
+        <p class="text-sm text-gray-600">カメラ / 東京</p>
+      </li>
+      <li class="border rounded p-4">
+        <h2 class="font-semibold">John Smith</h2>
+        <p class="text-sm text-gray-600">Hiking / Yokohama</p>
+      </li>
+      <li class="border rounded p-4">
+        <h2 class="font-semibold">Marina Chen</h2>
+        <p class="text-sm text-gray-600">Coffee / Shinjuku</p>
+      </li>
+    </ul>
+  </section>
 </BaseLayout>
