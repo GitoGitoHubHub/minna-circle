@@ -1,44 +1,49 @@
 ---
-const { title = "MinnaCircle", description = "", lang = "ja", canonical = "", ogImage = "/og.png" } = Astro.props;
+const { title = 'MinnaCircle', description = 'Find and join activity circles.', lang = 'ja', path = '/' } = Astro.props;
+const urlBase = Astro.site?.toString() || '';
+const site = urlBase.endsWith('/') ? urlBase.slice(0, -1) : urlBase;
+const url = `${site}${path}`;
+const isJa = lang === 'ja';
+const alt = isJa
+  ? `${site}/en${path === '/' ? '/' : path}`
+  : site + (path.startsWith('/en') ? (path.slice(3) || '/') : path);
 ---
-
-<!DOCTYPE html>
 <html lang={lang}>
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
-
-    {canonical && <link rel="canonical" href={canonical} />}
-
-    <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-
-    <!-- Open Graph / Facebook -->
+    <!-- canonical / hreflang -->
+    <link rel="canonical" href={url} />
+    <link rel="alternate" href={url} hreflang={isJa ? 'ja' : 'en'} />
+    <link rel="alternate" href={alt} hreflang={isJa ? 'en' : 'ja'} />
+    <link rel="alternate" href={site} hreflang="x-default" />
+    <!-- icons & PWA -->
+    <link rel="icon" href="/favicon.ico?v=2" sizes="any" />
+    <link rel="icon" href="/favicon.svg?v=2" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=2" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content={canonical} />
-    <meta property="og:image" content={ogImage} />
-
-    <!-- Twitter -->
+    <meta property="og:url" content={url} />
+    <meta property="og:image" content={`${site}/og.png`} />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content={title} />
-    <meta name="twitter:description" content={description} />
-    <meta name="twitter:image" content={ogImage} />
+    <!-- Organization JSON-LD -->
+    <script type="application/ld+json">
+      {JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'Organization',
+        name: 'MinnaCircle',
+        url: site,
+        logo: `${site}/og.png`,
+        sameAs: []
+      })}
+    </script>
   </head>
-  <body><!-- 例：BaseLayout の <body> 直下などに -->
-<nav class="p-3 flex gap-4 text-sm">
-  <a href="/">ホーム</a>
-  <a href="/members">Members</a>
-  <a href="/about">About</a>
-  <a href="/contact">Contact</a>
-  <a href="/en/">EN</a>
-</nav>
-
+  <body class="min-h-screen">
     <slot />
   </body>
 </html>
-
