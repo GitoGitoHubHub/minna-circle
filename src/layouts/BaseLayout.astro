@@ -1,15 +1,4 @@
 ---
-/**
- * BaseLayout
- * - canonical / meta / OG 既存維持
- * - Organization の JSON-LD を恒常出力（sameAs/絶対ロゴ対応）
- *
- * Props:
- *  - title?: string
- *  - description?: string
- *  - lang?: string ("ja" | "en" など) デフォルト: "ja"
- *  - image?: string  og:image 絶対URL推奨（未指定時は /og.png を使用）
- */
 import JsonLd from "../components/JsonLd.astro";
 import { buildOrganization } from "../lib/schema";
 
@@ -20,24 +9,23 @@ const {
   image,
 } = Astro.props;
 
-// サイトのオリジン（astro.configのsiteがあれば優先）
-const origin = (Astro.site ? String(Astro.site) : Astro.url.origin) ?? "";
-const url = new URL(Astro.url.pathname + Astro.url.search, origin || undefined).toString();
+// ★ origin は Astro.site のみ参照（SSR前提の origin フォールバックを排除）
+const origin = Astro.site ? String(Astro.site).replace(/\/$/, "") : "";
 
-// og:image は props.image 優先、なければ /og.png
+// パスは Astro.url から取得してOK（静的でも解決される）
+const pathname = Astro.url.pathname + Astro.url.search;
+const canonical = origin ? origin + pathname : undefined;
+
+// og:image は絶対URLを優先。なければ /og.png を絶対化
 const ogImage = image ?? (origin ? `${origin}/og.png` : "/og.png");
 
-// Organization スキーマ（sameAs/ロゴは絶対URLに）
 const orgSchema = buildOrganization({
   name: "MinnaCircle",
-  url: origin || url,
+  url: origin || undefined,
   logo: origin ? `${origin}/og.png` : undefined,
   sameAs: [
-    // ★ あるものだけ残してください
     "https://x.com/your_account",
     "https://www.instagram.com/your_account",
-    // "https://www.facebook.com/your_account",
-    // "https://www.youtube.com/@your_account",
   ].filter(Boolean),
 });
 ---
@@ -46,33 +34,27 @@ const orgSchema = buildOrganization({
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-
     <title>{title}</title>
     <meta name="description" content={description} />
 
-    <!-- Canonical -->
-    <link rel="canonical" href={url} />
+    {canonical && <link rel="canonical" href={canonical} />}
 
-    <!-- Favicon / App Icons -->
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 
-    <!-- Open Graph -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="MinnaCircle" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <meta property="og:url" content={url} />
+    {canonical && <meta property="og:url" content={canonical} />}
     <meta property="og:image" content={ogImage} />
 
-    <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImage} />
 
-    <!-- JSON-LD: Organization（全ページ共通） -->
     <JsonLd data={orgSchema} />
   </head>
   <body class="min-h-screen antialiased text-gray-900">
