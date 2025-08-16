@@ -1,0 +1,47 @@
+---
+import JsonLd from "../components/JsonLd.astro";
+import { buildOrganization, buildPlace, buildEvent } from "../lib/schema";
+
+// ★ 実運用では値を実データで置換してください
+const org = buildOrganization({
+  name: "MinnaCircle",
+  url: "https://example.com",
+  logo: "https://example.com/og.png",
+  sameAs: ["https://x.com/minnacircle"]
+});
+
+const place = buildPlace({
+  name: "豊洲公園 バスケットコート",
+  addressLocality: "江東区",
+  addressRegion: "東京都",
+  postalCode: "135-0061",
+  addressCountry: "JP",
+  latitude: 35.653,
+  longitude: 139.794
+});
+
+const event = buildEvent({
+  name: "日曜バスケ交流会",
+  description: "初心者歓迎。親子参加OK。",
+  startDate: "2025-08-24T10:00:00+09:00",
+  endDate: "2025-08-24T12:00:00+09:00",
+  location: place,
+  organizer: org,
+  offers: { price: 500, priceCurrency: "JPY", url: "https://example.com/apply" },
+  image: ["https://example.com/event.jpg"]
+});
+---
+
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <title>Schema Preview</title>
+    <JsonLd data={[org, place, event]} />
+  </head>
+  <body class="min-h-screen">
+    <main class="max-w-3xl mx-auto p-8">
+      <h1 class="text-2xl font-bold mb-4">Schema Preview</h1>
+      <p>このページは構造化データの出力確認用です。</p>
+    </main>
+  </body>
+</html>
