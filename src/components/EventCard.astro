@@ -1,0 +1,31 @@
+---
+import CardBase from "./CardBase.astro";
+const { event } = Astro.props;
+/**
+ * event オブジェクト想定例:
+ * {
+ *   id: "ev-001",
+ *   title: "週末バスケ個人参加",
+ *   description: "経験不問。楽しく汗をかきましょう！",
+ *   image: "/og.png",
+ *   dateText: "2025-09-06 18:00",
+ *   placeText: "江東区スポセン",
+ *   isFeatured: true
+ * }
+ */
+---
+
+<CardBase
+  image={event.image}
+  title={event.title}
+  description={event.description}
+  tags={[event?.isFeatured ? "注目イベント" : "イベント"]}
+  meta={[
+    `📅 ${event?.dateText ?? ""}`,
+    `📍 ${event?.placeText ?? ""}`
+  ]}
+  actions={[
+    { href: `/events/${event?.id}`, label: "詳細を見る" },
+    { href: `/events/${event?.id}/join`, label: "参加する", primary: true }
+  ]}
+/>
