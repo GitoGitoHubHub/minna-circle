@@ -1,35 +1,36 @@
 ---
-interface Props {
+const { circle } = Astro.props as {
   circle: {
     id: string;
     name: string;
-    intro: string;
-    image: string;
-    memberCount: number;
-    areaText: string;
-    popularity: number;
+    intro?: string;
+    image?: string;
+    memberCount?: number;
+    areaText?: string;
+    popularity?: number;
   };
-}
-const { circle } = Astro.props;
+};
 ---
 
 <a href={`/circles/${circle.id}`} class="block rounded-2xl border shadow hover:shadow-lg transition bg-white overflow-hidden">
-  <!-- 固定高さのサムネイル（小さめ） -->
-  <div class="relative w-full h-24 overflow-hidden">
+  <!-- 固定高さサムネイル（インラインstyleで確実に固定） -->
+  <div class="relative w-full overflow-hidden" style="height:96px">
     <img
-      src={circle.image}
+      src={circle.image || "/og.png"}
       alt={circle.name}
-      class="absolute inset-0 !w-full !h-full object-cover"
+      class="absolute inset-0 w-full h-full object-cover"
       loading="lazy"
       decoding="async"
     />
   </div>
 
   <div class="p-4 space-y-2">
-    <h3 class="text-lg font-bold line-clamp-2">{circle.name}</h3>
-    <p class="text-sm text-gray-600 line-clamp-2">{circle.intro}</p>
-    <p class="text-xs text-gray-500">メンバー数: {circle.memberCount}</p>
-    <p class="text-xs text-gray-500">エリア: {circle.areaText}</p>
-    <p class="text-xs text-gray-500">人気度: {circle.popularity}</p>
+    <h3 class="text-lg font-bold">{circle.name}</h3>
+    {circle.intro && <p class="text-sm text-gray-600">{circle.intro}</p>}
+    {typeof circle.memberCount === "number" && (
+      <p class="text-xs text-gray-500">メンバー数: {circle.memberCount}</p>
+    )}
+    {circle.areaText && <p class="text-xs text-gray-500">エリア: {circle.areaText}</p>}
+    {typeof circle.popularity === "number" && <p class="text-xs text-gray-500">人気度: {circle.popularity}</p>}
   </div>
 </a>
