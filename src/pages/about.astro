@@ -1,21 +1,106 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
+const title = "About | MinnaCircle";
+const description = "MinnaCircle（ミンナサークル）は、趣味のサークル・イベントを探して参加できるコミュニティ・プラットフォームです。シンプルなUIで、だれでも気軽に新しいつながりを。";
 ---
 
-<BaseLayout
-  title="MinnaCircleとは | MinnaCircle"
-  description="MinnaCircleについての紹介ページです。"
-  path="/about"
-  lang="ja"
->
-  <section class="max-w-3xl mx-auto px-4 py-10">
-    <h1 class="text-2xl md:text-3xl font-bold mb-6">MinnaCircleとは？</h1>
-    <p class="mb-4">
-      MinnaCircleは、趣味やサークル活動を通じて人々が自然につながることを目的としたコミュニティサイトです。
-      多言語対応（日本語・英語）により、外国人ユーザーも安心して利用できます。
-    </p>
-    <p>
-      本サイトを通じて、仲間づくり・地域交流・ライフスタイル向上のきっかけを提供していきます。
-    </p>
+<BaseLayout title={title} lang="ja" meta_description={description}>
+  <section class="max-w-5xl mx-auto px-4 py-10 md:py-14">
+    <header class="mb-8">
+      <h1 class="text-2xl md:text-4xl font-extrabold">MinnaCircle について</h1>
+      <p class="text-gray-600 mt-2 md:text-lg">
+        趣味でつながる、みんなのサークル。近くの活動を見つけて気軽に参加できます。
+      </p>
+    </header>
+
+    <!-- ミッション -->
+    <section class="bg-white rounded-2xl shadow p-6 md:p-8 mb-8">
+      <h2 class="text-xl md:text-2xl font-bold mb-3">ミッション</h2>
+      <p class="text-gray-700 leading-relaxed">
+        MinnaCircle は、日常の「やってみたい」を後押しし、安心して参加できる
+        地域コミュニティづくりを目指しています。シンプルなUI、クリック数の少ない導線、
+        モバイル最優先の設計で、だれでもカンタンに使えることを大切にしています。
+      </p>
+    </section>
+
+    <!-- できること -->
+    <section class="bg-white rounded-2xl shadow p-6 md:p-8 mb-8">
+      <h2 class="text-xl md:text-2xl font-bold mb-4">MinnaCircleでできること</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div class="rounded-xl border p-5">
+          <h3 class="font-semibold mb-2">サークル・イベントを探す</h3>
+          <p class="text-gray-600 text-sm">
+            エリア・タグ・費用帯・日時レンジで検索。おすすめ表示や注目イベントからも発見できます。
+          </p>
+        </div>
+        <div class="rounded-xl border p-5">
+          <h3 class="font-semibold mb-2">気軽に参加する</h3>
+          <p class="text-gray-600 text-sm">
+            申込期日・キャンセル期日が明確。特記事項（全角50文字）で事前連絡も簡単です。
+          </p>
+        </div>
+        <div class="rounded-xl border p-5">
+          <h3 class="font-semibold mb-2">主催者向けの運営サポート</h3>
+          <p class="text-gray-600 text-sm">
+            参加者一覧のCSV出力や、キャンセルポリシー（上限は参加費100%）の設定に対応予定。
+          </p>
+        </div>
+        <div class="rounded-xl border p-5">
+          <h3 class="font-semibold mb-2">将来の拡張</h3>
+          <p class="text-gray-600 text-sm">
+            多言語（英/中）・PWA・API連携・LINE通知などを段階的に提供予定です。
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 安心・安全の基本方針 -->
+    <section class="bg-white rounded-2xl shadow p-6 md:p-8 mb-8">
+      <h2 class="text-xl md:text-2xl font-bold mb-3">安心・安全の基本方針</h2>
+      <ul class="list-disc pl-5 text-gray-700 space-y-2">
+        <li>年齢に応じた機能制限（13歳未満は登録不可、13–17歳はDM/サークル作成不可、18歳以上は全機能）。</li>
+        <li>DMは相互いいね＋同一イベント2回以上の参加が条件（初期はDMオフ）。</li>
+        <li>通報・ブロック機能（管理人は通報内容を確認）。</li>
+        <li>キャンセル料の上限は参加費100%（主催者設定による）。</li>
+      </ul>
+    </section>
+
+    <!-- 使い方（3ステップ） -->
+    <section class="bg-white rounded-2xl shadow p-6 md:p-8 mb-8">
+      <h2 class="text-xl md:text-2xl font-bold mb-4">使い方（3ステップ）</h2>
+      <ol class="list-decimal pl-5 space-y-3 text-gray-700">
+        <li><span class="font-semibold">検索する：</span> トップの検索窓または <a href="/search" class="text-indigo-600 underline">詳細検索</a> を利用。</li>
+        <li><span class="font-semibold">詳細を読む：</span> 開催日・場所・費用・キャンセル期日、注意事項を確認。</li>
+        <li><span class="font-semibold">申し込む：</span> 必要に応じて特記事項（全角50文字）を入力して申込。</li>
+      </ol>
+    </section>
+
+    <!-- よくある質問（簡易版） -->
+    <section class="bg-white rounded-2xl shadow p-6 md:p-8 mb-8">
+      <h2 class="text-xl md:text-2xl font-bold mb-4">よくある質問</h2>
+      <div class="space-y-4 text-gray-700">
+        <details class="rounded-xl border p-4">
+          <summary class="font-semibold cursor-pointer">参加費の支払い方法は？</summary>
+          <p class="mt-2 text-sm">現時点では当日現地支払いまたは主催者指定の方法です（将来オンライン決済対応予定）。</p>
+        </details>
+        <details class="rounded-xl border p-4">
+          <summary class="font-semibold cursor-pointer">キャンセル料はかかりますか？</summary>
+          <p class="mt-2 text-sm">主催者の設定により異なります。上限は参加費100%です。各イベント詳細をご確認ください。</p>
+        </details>
+        <details class="rounded-xl border p-4">
+          <summary class="font-semibold cursor-pointer">未成年は利用できますか？</summary>
+          <p class="mt-2 text-sm">13歳未満は登録不可、13–17歳は一部機能が制限されます（DM/サークル作成不可）。</p>
+        </details>
+      </div>
+    </section>
+
+    <!-- コンタクト導線 -->
+    <section class="bg-indigo-50 rounded-2xl p-6 md:p-8">
+      <h2 class="text-xl md:text-2xl font-bold mb-2">ご意見・お問い合わせ</h2>
+      <p class="text-gray-700">改善要望や不具合報告はお問い合わせページからどうぞ。</p>
+      <div class="mt-4">
+        <a href="/contact" class="inline-block bg-indigo-600 text-white px-5 py-2 rounded-xl shadow hover:bg-indigo-700 transition">お問い合わせへ</a>
+      </div>
+    </section>
   </section>
 </BaseLayout>
