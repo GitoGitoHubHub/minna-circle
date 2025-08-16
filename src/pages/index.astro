@@ -265,21 +265,17 @@ const FEATURED_EVENTS = EVENTS.slice(0, 2);
     </div>
   </section>
 
-  <!-- データを安全に埋め込む -->
-  <script type="application/json" id="circles-data">
-    {JSON.stringify(CIRCLES)}
-  </script>
-
-  <!-- フィルタ処理 -->
-  <script>
+  <!-- クライアント側フィルタ（define:vars で CIRCLES を受け渡し） -->
+  <script define:vars={{ CIRCLES }}>
     const grid = document.getElementById("resultGrid");
     const count = document.getElementById("resultCount");
     const form = document.getElementById("searchForm");
     const chips = document.getElementById("activeChips");
-    const DATA = JSON.parse(document.getElementById("circles-data").textContent);
+
+    const DATA = CIRCLES;
 
     function getChecked(name) {
-      return [...form.querySelectorAll(\`input[name="\${name}"]:checked\`)].map(i => i.value);
+      return [...form.querySelectorAll(`input[name="${name}"]:checked`)].map(i => i.value);
     }
     function num(v) { const n = Number(v); return Number.isFinite(n) ? n : null; }
     function includesFold(hay = "", needle = "") {
@@ -300,20 +296,20 @@ const FEATURED_EVENTS = EVENTS.slice(0, 2);
 
       // アクティブ条件のチップ
       const parts = [];
-      const q = form.q.value.trim(); if (q) parts.push(\`キーワード: \${q}\`);
-      const pref = form.pref.value; if (pref) parts.push(\`都道府県: \${pref}\`);
-      const city = form.city.value.trim(); if (city) parts.push(\`市区町村: \${city}\`);
-      const station = form.station.value.trim(); if (station) parts.push(\`駅: \${station}\`);
-      const cats = getChecked("category"); if (cats.length) parts.push(\`ジャンル: \${cats.join("、")}\`);
-      const genders = getChecked("gender"); if (genders.length) parts.push(\`構成: \${genders.join("、")}\`);
-      const levels = getChecked("level"); if (levels.length) parts.push(\`レベル: \${levels.join("、")}\`);
-      const ages = getChecked("ageGroup"); if (ages.length) parts.push(\`年齢: \${ages.join("、")}\`);
-      const wds = getChecked("weekday"); if (wds.length) parts.push(\`曜日: \${wds.join("、")}\`);
-      const times = getChecked("time"); if (times.length) parts.push(\`時間帯: \${times.join("、")}\`);
+      const q = form.q.value.trim(); if (q) parts.push(`キーワード: ${q}`);
+      const pref = form.pref.value; if (pref) parts.push(`都道府県: ${pref}`);
+      const city = form.city.value.trim(); if (city) parts.push(`市区町村: ${city}`);
+      const station = form.station.value.trim(); if (station) parts.push(`駅: ${station}`);
+      const cats = getChecked("category"); if (cats.length) parts.push(`ジャンル: ${cats.join("、")}`);
+      const genders = getChecked("gender"); if (genders.length) parts.push(`構成: ${genders.join("、")}`);
+      const levels = getChecked("level"); if (levels.length) parts.push(`レベル: ${levels.join("、")}`);
+      const ages = getChecked("ageGroup"); if (ages.length) parts.push(`年齢: ${ages.join("、")}`);
+      const wds = getChecked("weekday"); if (wds.length) parts.push(`曜日: ${wds.join("、")}`);
+      const times = getChecked("time"); if (times.length) parts.push(`時間帯: ${times.join("、")}`);
       const feeMin = num(form.feeMin.value); const feeMax = num(form.feeMax.value);
-      if (feeMin != null || feeMax != null) parts.push(\`月会費: \${feeMin ?? 0}〜\${feeMax ?? "上限なし"}円\`);
+      if (feeMin != null || feeMax != null) parts.push(`月会費: ${feeMin ?? 0}〜${feeMax ?? "上限なし"}円`);
       const minMem = num(form.minMembers.value); const maxMem = num(form.maxMembers.value);
-      if (minMem != null || maxMem != null) parts.push(\`人数: \${minMem ?? 0}〜\${maxMem ?? "上限なし"}\`);
+      if (minMem != null || maxMem != null) parts.push(`人数: ${minMem ?? 0}〜${maxMem ?? "上限なし"}`);
 
       chips.innerHTML = parts.map(p => `<span class="inline-flex items-center px-2 py-1 rounded-full bg-gray-100 border">${p}</span>`).join("");
     }
@@ -339,32 +335,20 @@ const FEATURED_EVENTS = EVENTS.slice(0, 2);
       const maxMembers = num(form.maxMembers.value);
 
       const hit = DATA.filter(c => {
-        // キーワード
         if (q && !includesFold(`${c.name} ${c.category} ${c.areaPref} ${c.areaCity} ${c.station} ${(c.tags||[]).join(" ")}`, q)) return false;
-
-        // エリア
         if (pref && c.areaPref !== pref) return false;
         if (city && !includesFold(c.areaCity || "", city)) return false;
         if (station && !includesFold(c.station || "", station)) return false;
-
-        // 多項目
         if (categories.length && !categories.includes(c.category)) return false;
         if (genders.length && !genders.includes(c.gender)) return false;
         if (levels.length && !levels.includes(c.level)) return false;
         if (ages.length && !(c.ageGroup || []).some(a => ages.includes(a))) return false;
-
-        // 曜日・時間
         if (weekdays.length && !(c.weekday || []).some(d => weekdays.includes(d))) return false;
         if (times.length && !(c.time || []).some(t => times.includes(t))) return false;
-
-        // 料金帯
         if (feeMin != null && !(c.monthlyFee >= feeMin)) return false;
         if (feeMax != null && !(c.monthlyFee <= feeMax)) return false;
-
-        // 人数
         if (minMembers != null && !(c.memberCount >= minMembers)) return false;
         if (maxMembers != null && !(c.memberCount <= maxMembers)) return false;
-
         return true;
       });
 
