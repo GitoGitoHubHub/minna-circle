@@ -1,0 +1,211 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+/**
+ * ダミーデータ（これまでの一覧とIDを合わせています）
+ * 実データ接続時は API/DB から取得し、getStaticPaths を差し替えてください。
+ */
+const allEvents = [
+  {
+    id: "ev-001",
+    title: "朝活ランニング＠木場公園",
+    description: "初心者歓迎。会話しながら軽く3km！ウォームアップ→ゆるラン→ストレッチの流れです。",
+    image: "/og.png",
+    dateText: "2025-09-01 07:00",
+    endText:  "2025-09-01 08:00",
+    placeText: "木場公園集合",
+    areaText: "江東区",
+    isFeatured: true,
+    fee: 0,
+    capacity: 20,
+    organizer: "MinnaCircle Running",
+    createdAt: "2025-08-10T08:00:00+09:00",
+    tags: ["ランニング","初心者歓迎","朝活"]
+  },
+  {
+    id: "ev-002",
+    title: "週末バスケ個人参加",
+    description: "経験不問。チーム分け→スクリメージ中心。怪我防止のため準備運動を各自でお願いします。",
+    image: "/og.png",
+    dateText: "2025-09-06 18:00",
+    endText:  "2025-09-06 20:00",
+    placeText: "江東区スポセン",
+    areaText: "江東区",
+    isFeatured: false,
+    fee: 800,
+    capacity: 30,
+    organizer: "MinnaCircle Basketball",
+    createdAt: "2025-08-14T18:00:00+09:00",
+    tags: ["バスケ","個サル","初心者歓迎"]
+  },
+  {
+    id: "ev-003",
+    title: "英会話ゆるカフェ会",
+    description: "カジュアル英会話。レベル不問。子連れ可。スモールトークのテーマカードを用意します。",
+    image: "/og.png",
+    dateText: "2025-09-07 10:00",
+    endText:  "2025-09-07 11:30",
+    placeText: "清澄白河",
+    areaText: "江東区",
+    isFeatured: false,
+    fee: 500,
+    capacity: 12,
+    organizer: "MinnaCircle English",
+    createdAt: "2025-08-12T12:00:00+09:00",
+    tags: ["英会話","カフェ","親子OK"]
+  }
+];
+
+/** 動的ルーティング用パラメータ */
+const { id } = Astro.params;
+
+/** 本来はAPI/DBから該当IDを取得 */
+const event = allEvents.find((e) => e.id === id);
+if (!event) {
+  // 見つからない場合は404にフォールバック
+  throw Astro.redirect("/404");
+}
+
+/** メタ */
+const pageTitle = `${event.title} | MinnaCircle`;
+const pageDesc  = `${event.description}`;
+
+/** サイトURL（astro.configのsiteが設定されている場合に使用） */
+const siteUrl = (Astro.site && Astro.site.href) ? Astro.site.href.replace(/\/$/, "") : "";
+
+/** ISO文字列ユーティリティ（例：2025-09-01 07:00 → 2025-09-01T07:00:00+09:00） */
+const toISO = (s: string) => new Date(s.replace(" ", "T") + "+09:00").toISOString();
+
+/** JSON-LD: Event */
+const eventLd = {
+  "@context": "https://schema.org",
+  "@type": "Event",
+  "name": event.title,
+  "description": event.description,
+  ...(siteUrl ? { "url": `${siteUrl}/events/${event.id}` } : {}),
+  "image": event.image,
+  "eventStatus": "https://schema.org/EventScheduled",
+  "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+  "startDate": toISO(event.dateText),
+  ...(event.endText ? { "endDate": toISO(event.endText) } : {}),
+  "location": {
+    "@type": "Place",
+    "name": event.placeText,
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": event.areaText,
+      "addressCountry": "JP"
+    }
+  },
+  "organizer": {
+    "@type": "Organization",
+    "name": event.organizer,
+    ...(siteUrl ? { "url": siteUrl } : {})
+  },
+  ...(Number.isFinite(event.fee) ? {
+    "offers": {
+      "@type": "Offer",
+      "price": String(event.fee),
+      "priceCurrency": "JPY",
+      "availability": "https://schema.org/InStock",
+      ...(siteUrl ? { "url": `${siteUrl}/events/${event.id}/join` } : {})
+    }
+  } : {})
+};
+
+/** JSON-LD: パンくず */
+const breadcrumbLd = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      ...(siteUrl ? { "item": siteUrl } : {})
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Events",
+      ...(siteUrl ? { "item": `${siteUrl}/events` } : {})
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": event.title,
+      ...(siteUrl ? { "item": `${siteUrl}/events/${event.id}` } : {})
+    }
+  ]
+};
+---
+
+<BaseLayout title={pageTitle} lang="ja" meta_description={pageDesc}>
+  <!-- JSON-LD: Event / Breadcrumb -->
+  <script type="application/ld+json">{JSON.stringify(eventLd)}</script>
+  <script type="application/ld+json">{JSON.stringify(breadcrumbLd)}</script>
+
+  <section class="max-w-5xl mx-auto px-4 py-8 md:py-12">
+    <!-- タイトル / メタ -->
+    <div class="mb-6">
+      <nav class="text-xs text-gray-500 mb-2">
+        <a class="hover:underline" href="/">Home</a> / <a class="hover:underline" href="/events">Events</a> / <span>{event.title}</span>
+      </nav>
+      <h1 class="text-2xl md:text-4xl font-extrabold">{event.title}</h1>
+      <div class="mt-2 flex flex-wrap gap-2 text-sm text-gray-600">
+        <span>📅 {event.dateText}{event.endText ? ` 〜 ${event.endText}` : ""}</span>
+        <span>・📍 {event.placeText}（{event.areaText}）</span>
+        {Number.isFinite(event.fee) && (<span>・💴 参加費: {event.fee === 0 ? "無料" : `¥${event.fee.toLocaleString()}`}</span>)}
+        {event.capacity && (<span>・👥 定員: {event.capacity}名</span>)}
+      </div>
+      <div class="mt-2 flex flex-wrap gap-2">
+        {event.tags?.map((t) => <span class="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-xs">{t}</span>)}
+      </div>
+    </div>
+
+    <!-- メイン -->
+    <div class="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-6">
+      <!-- 詳細 -->
+      <article class="bg-white rounded-2xl shadow p-5 md:p-7">
+        <img src={event.image} alt={event.title} class="rounded-xl w-full h-56 object-cover mb-4" loading="lazy" />
+        <h2 class="text-lg md:text-xl font-bold mb-2">イベント概要</h2>
+        <p class="text-gray-700 leading-relaxed">{event.description}</p>
+
+        <h3 class="mt-6 font-semibold">開催情報</h3>
+        <ul class="mt-2 text-sm text-gray-700 space-y-1">
+          <li>📅 開催日時: {event.dateText}{event.endText ? ` 〜 ${event.endText}` : ""}</li>
+          <li>📍 会場: {event.placeText}（{event.areaText}）</li>
+          {Number.isFinite(event.fee) && (<li>💴 参加費: {event.fee === 0 ? "無料" : `¥${event.fee.toLocaleString()}`}</li>)}
+          {event.capacity && (<li>👥 定員: {event.capacity}名</li>)}
+          <li>🏷️ タグ: {event.tags?.join(" / ")}</li>
+          <li>🧑‍🤝‍🧑 主催: {event.organizer}</li>
+        </ul>
+
+        <div class="mt-6 flex gap-3">
+          <a href={`/events/${event.id}/join`} class="bg-indigo-600 text-white px-5 py-2 rounded-xl shadow hover:bg-indigo-700 transition">参加申し込みへ</a>
+          <a href="/search?type=event" class="px-5 py-2 rounded-xl border hover:bg-gray-50 transition">他のイベントを探す</a>
+        </div>
+      </article>
+
+      <!-- サイド -->
+      <aside class="space-y-4">
+        <div class="bg-white rounded-2xl shadow p-5">
+          <h3 class="font-semibold mb-2">開催地</h3>
+          <p class="text-sm text-gray-700">{event.placeText}（{event.areaText}）</p>
+          <p class="text-xs text-gray-500 mt-1">※住所詳細や地図は主催者が公開範囲を設定します。</p>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow p-5">
+          <h3 class="font-semibold mb-2">注意事項</h3>
+          <ul class="text-sm text-gray-700 list-disc pl-5 space-y-1">
+            <li>体調不良時は無理せず参加をお控えください。</li>
+            <li>未成年の方は保護者の同意が必要です。</li>
+            <li>キャンセルポリシーの上限は参加費100%です。</li>
+          </ul>
+        </div>
+
+        <a href="/" class="block text-center text-indigo-700 underline">トップへ戻る</a>
+      </aside>
+    </div>
+  </section>
+</BaseLayout>
