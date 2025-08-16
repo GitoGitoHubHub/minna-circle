@@ -1,0 +1,158 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import CircleCard from "../../components/CircleCard.astro";
+
+/** ダミーデータ（詳細 cl-001〜003 と整合） */
+const allCircles = [
+  {
+    id: "cl-001",
+    name: "ミンナでバスケ",
+    intro: "初心者～経験者まで幅広く。試合より交流重視！週末に江東区・墨田区で活動しています。",
+    image: "/og.png",
+    memberCount: 42,
+    areaText: "江東区・墨田区",
+    isPickup: true,
+    tags: ["バスケ","交流","初心者歓迎"],
+    popularity: 150,
+    createdAt: "2025-08-05T12:00:00+09:00"
+  },
+  {
+    id: "cl-002",
+    name: "清澄コーヒー巡り部",
+    intro: "週一でコーヒー店を探訪。豆知識を気軽に共有しながら、カフェ文化を楽しむコミュニティです。",
+    image: "/og.png",
+    memberCount: 18,
+    areaText: "清澄白河・門前仲町",
+    isPickup: false,
+    tags: ["カフェ","散策"],
+    popularity: 80,
+    createdAt: "2025-08-15T09:00:00+09:00"
+  },
+  {
+    id: "cl-003",
+    name: "親子で外遊び",
+    intro: "小さなお子さん歓迎。水遊び・公園ピクニックなど、ゆるく楽しく屋外で交流します。",
+    image: "/og.png",
+    memberCount: 27,
+    areaText: "東陽町・有明",
+    isPickup: false,
+    tags: ["親子OK","公園","アウトドア"],
+    popularity: 96,
+    createdAt: "2025-08-08T09:00:00+09:00"
+  }
+];
+
+/** クエリ取得 */
+const url = new URL(Astro.request.url);
+const q = (url.searchParams.get("q") ?? "").toLowerCase();
+const area = (url.searchParams.get("area") ?? "").toLowerCase();
+const sort = (url.searchParams.get("sort") ?? "recent").toLowerCase(); // recent|popular|member|name
+
+/** ユーティリティ */
+const norm = (s: string) => (s ?? "").toLowerCase();
+const parseDate = (s: string) => new Date(s).getTime();
+
+/** フィルタ */
+const hit = (c) =>
+  (!q || norm(c.name).includes(q) || norm(c.intro).includes(q) || c.tags?.some(t => norm(t).includes(q))) &&
+  (!area || norm(c.areaText).includes(area));
+
+/** ソート */
+const byDesc = (a,b) => b-a, byAsc = (a,b) => a-b;
+const sortCircles = (list) => {
+  switch (sort) {
+    case "popular": return [...list].sort((a,b)=>byDesc(a.popularity, b.popularity));
+    case "member":  return [...list].sort((a,b)=>byDesc(a.memberCount, b.memberCount));
+    case "name":    return [...list].sort((a,b)=>norm(a.name).localeCompare(norm(b.name), "ja"));
+    case "recent":
+    default:        return [...list].sort((a,b)=>byDesc(parseDate(a.createdAt), parseDate(b.createdAt)));
+  }
+};
+const circles = sortCircles(allCircles.filter(hit));
+
+/** クエリ生成 */
+const withQS = (patch: Record<string,string>) => {
+  const u = new URL(url);
+  Object.entries(patch).forEach(([k,v]) => {
+    if (!v) u.searchParams.delete(k); else u.searchParams.set(k,v);
+  });
+  return `${u.pathname}?${u.searchParams.toString()}`;
+};
+
+/** JSON-LD（CollectionPage + ItemList（Organization想定）） */
+const siteUrl = (Astro.site && Astro.site.href) ? Astro.site.href.replace(/\/$/, "") : "";
+const collectionLd = {
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": "サークル一覧 - MinnaCircle",
+  ...(siteUrl ? { "url": `${siteUrl}/circles` } : {}),
+  "description": "サークルの一覧ページ。新着順・人気順・メンバー数・名前で並び替え可能。"
+};
+const itemListLd = {
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  "itemListOrder": (sort === "name" ? "http://schema.org/ItemListOrderAscending" : "http://schema.org/ItemListOrderDescending"),
+  "numberOfItems": circles.length,
+  "itemListElement": circles.map((c, idx) => ({
+    "@type": "ListItem",
+    "position": idx + 1,
+    "url": siteUrl ? `${siteUrl}/circles/${c.id}` : undefined,
+    "name": c.name
+  }))
+};
+---
+
+<BaseLayout title="Circles | MinnaCircle" lang="ja" meta_description="サークル一覧（新着/人気/メンバー数/名前で並び替え・簡易検索に対応）">
+  <!-- JSON-LD -->
+  <script type="application/ld+json">{JSON.stringify(collectionLd)}</script>
+  <script type="application/ld+json">{JSON.stringify(itemListLd)}</script>
+
+  <section class="max-w-6xl mx-auto px-4 py-8 md:py-12">
+    <header class="mb-6">
+      <h1 class="text-2xl md:text-3xl font-extrabold">サークル一覧</h1>
+      <p class="text-gray-600 mt-1">気になるサークルを探してみましょう。</p>
+    </header>
+
+    <!-- フィルタ/ソート -->
+    <form action="/circles" method="get" class="grid grid-cols-1 md:grid-cols-[1fr_160px_160px_auto] gap-2 items-center mb-4">
+      <input name="q" type="search" placeholder="キーワード（例：バスケ/カフェ/親子）" value={q} class="rounded-xl border px-4 py-2" />
+      <input name="area" type="text" placeholder="エリア（例：江東区）" value={area} class="rounded-xl border px-4 py-2" />
+      <select name="sort" class="rounded-xl border px-3 py-2">
+        <option value="recent"   selected={sort==="recent"}>新着順</option>
+        <option value="popular"  selected={sort==="popular"}>人気順</option>
+        <option value="member"   selected={sort==="member"}>メンバー数</option>
+        <option value="name"     selected={sort==="name"}>名前（A→Z/あ→ん）</option>
+      </select>
+      <div class="flex gap-2">
+        <button class="bg-indigo-600 text-white px-5 py-2 rounded-xl shadow hover:bg-indigo-700 transition">適用</button>
+        <a href="/circles" class="px-4 py-2 rounded-xl border hover:bg-gray-50 transition">クリア</a>
+      </div>
+    </form>
+
+    <!-- クイック並び替え -->
+    <div class="flex flex-wrap gap-2 text-xs md:text-sm mb-4">
+      <a class="px-3 py-1 rounded-full border hover:bg-gray-50" href={withQS({ sort:"recent" })}>新着順</a>
+      <a class="px-3 py-1 rounded-full border hover:bg-gray-50" href={withQS({ sort:"popular" })}>人気順</a>
+      <a class="px-3 py-1 rounded-full border hover:bg-gray-50" href={withQS({ sort:"member" })}>メンバー数</a>
+      <a class="px-3 py-1 rounded-full border hover:bg-gray-50" href={withQS({ sort:"name" })}>名前（A→Z/あ→ん）</a>
+    </div>
+
+    <!-- 件数 -->
+    <p class="text-sm text-gray-500 mb-3">該当件数: {circles.length}</p>
+
+    <!-- 一覧 -->
+    {circles.length > 0 ? (
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        {circles.map(c => (<CircleCard circle={c} />))}
+      </div>
+    ) : (
+      <div class="rounded-2xl border p-6 text-center text-gray-600">該当するサークルが見つかりませんでした。</div>
+    )}
+
+    <!-- 導線 -->
+    <div class="mt-8 flex flex-wrap gap-3">
+      <a href="/search?type=circle" class="px-5 py-2 rounded-xl border hover:bg-gray-50 transition">詳細検索へ</a>
+      <a href="/" class="text-indigo-700 underline px-3 py-2">トップへ戻る</a>
+    </div>
+  </section>
+</BaseLayout>
