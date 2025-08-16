@@ -46,9 +46,35 @@ const withQS = (patch: Record<string,string>) => {
   });
   return `${u.pathname}?${u.searchParams.toString()}`;
 };
+
+/** JSON-LD（CollectionPage + ItemList） */
+const siteUrl = (Astro.site && Astro.site.href) ? Astro.site.href.replace(/\/$/, "") : "";
+const collectionLd = {
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": "イベント一覧 - MinnaCircle",
+  ...(siteUrl ? { "url": `${siteUrl}/events` } : {}),
+  "description": "開催予定のイベント一覧ページ。開催日が近い順・新着順などで並び替え可能。"
+};
+const itemListLd = {
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  "itemListOrder": (sort === "date" ? "http://schema.org/ItemListOrderAscending" : "http://schema.org/ItemListOrderDescending"),
+  "numberOfItems": events.length,
+  "itemListElement": events.map((ev, idx) => ({
+    "@type": "ListItem",
+    "position": idx + 1,
+    "url": siteUrl ? `${siteUrl}/events/${ev.id}` : undefined,
+    "name": ev.title
+  }))
+};
 ---
 
 <BaseLayout title="Events | MinnaCircle" lang="ja" meta_description="開催予定のイベント一覧（並び替え・簡易フィルタ対応）">
+  <!-- JSON-LD投入 -->
+  <script type="application/ld+json">{JSON.stringify(collectionLd)}</script>
+  <script type="application/ld+json">{JSON.stringify(itemListLd)}</script>
+
   <section class="max-w-6xl mx-auto px-4 py-8 md:py-12">
     <header class="mb-6">
       <h1 class="text-2xl md:text-3xl font-extrabold">イベント一覧</h1>
@@ -98,3 +124,4 @@ const withQS = (patch: Record<string,string>) => {
     </div>
   </section>
 </BaseLayout>
+
