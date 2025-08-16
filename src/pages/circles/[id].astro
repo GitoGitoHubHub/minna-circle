@@ -1,56 +1,49 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import JsonLd from "../../components/JsonLd.astro";
+import { buildOrganization } from "../../lib/schema";
 
 /**
- * ダミーデータ（一覧やトップの featuredCircles と整合）
- * 実データ接続時は API/DB 取得＋ getStaticPaths に差し替え。
+ * ダミーのサークル一覧（トップの featuredCircles とID合わせ）
+ * 実運用では API/DB に差し替え、getStaticPaths で動的生成してください。
  */
 const allCircles = [
   {
     id: "cl-001",
     name: "ミンナでバスケ",
-    intro: "初心者～経験者まで幅広く。試合より交流重視！週末に江東区・墨田区で活動しています。",
+    intro: "初心者～経験者まで幅広く。試合より交流重視！",
     image: "/og.png",
     memberCount: 42,
     areaText: "江東区・墨田区",
-    isPickup: true,
-    tags: ["バスケ","交流","初心者歓迎"],
-    contactEmail: "basket@example.com",
-    website: "",
-    createdAt: "2025-08-05T12:00:00+09:00"
+    tags: ["バスケ","交流","初心者OK"],
+    social: { x: "", instagram: "" }
   },
   {
     id: "cl-002",
     name: "清澄コーヒー巡り部",
-    intro: "週一でコーヒー店を探訪。豆知識を気軽に共有しながら、カフェ文化を楽しむコミュニティです。",
+    intro: "週一でコーヒー店を探訪。豆知識交換しましょう。",
     image: "/og.png",
     memberCount: 18,
     areaText: "清澄白河・門前仲町",
-    isPickup: false,
-    tags: ["カフェ","散策"],
-    contactEmail: "coffee@example.com",
-    website: "",
-    createdAt: "2025-08-15T09:00:00+09:00"
+    tags: ["カフェ","コーヒー","街歩き"],
+    social: { x: "", instagram: "" }
   },
   {
     id: "cl-003",
     name: "親子で外遊び",
-    intro: "小さなお子さん歓迎。水遊び・公園ピクニックなど、ゆるく楽しく屋外で交流します。",
+    intro: "小さなお子さん歓迎。水遊び・公園ピクニックなど。",
     image: "/og.png",
     memberCount: 27,
     areaText: "東陽町・有明",
-    isPickup: false,
-    tags: ["親子OK","公園","アウトドア"],
-    contactEmail: "family@example.com",
-    website: "",
-    createdAt: "2025-08-08T09:00:00+09:00"
+    tags: ["親子","外遊び","ピクニック"],
+    social: { x: "", instagram: "" }
   }
 ];
 
 /** ルーティングパラメータ */
 const { id } = Astro.params;
 
-/** 本来はAPI/DBから取得 */
+/** 対象サークルを取得（なければ404） */
 const circle = allCircles.find((c) => c.id === id);
 if (!circle) {
   throw Astro.redirect("/404");
@@ -60,110 +53,99 @@ if (!circle) {
 const pageTitle = `${circle.name} | MinnaCircle`;
 const pageDesc  = circle.intro;
 
-/** サイトURL（astro.configのsiteがあれば使用） */
-const siteUrl = (Astro.site && Astro.site.href) ? Astro.site.href.replace(/\/$/, "") : "";
+/** サイトOrigin（astro.configのsiteがあれば使用） */
+const siteOrigin = (Astro.site && Astro.site.href) ? Astro.site.href.replace(/\/$/, "") : "";
 
-/** JSON-LD: Organization */
-const orgLd = {
-  "@context": "https://schema.org",
-  "@type": "Organization",
-  "name": circle.name,
-  "description": circle.intro,
-  ...(siteUrl ? { "url": `${siteUrl}/circles/${circle.id}` } : {}),
-  "logo": circle.image,
-  "areaServed": circle.areaText,
-  "numberOfEmployees": circle.memberCount, // 便宜的にメンバー数を反映
-  "contactPoint": [
-    {
-      "@type": "ContactPoint",
-      "contactType": "customer support",
-      "email": circle.contactEmail,
-      "availableLanguage": ["Japanese", "English", "Chinese"]
-    }
-  ]
-};
+/** JSON-LD: Organization（サークル自体を団体としてマークアップ） */
+const orgLd = buildOrganization({
+  name: circle.name,
+  url: siteOrigin ? `${siteOrigin}/circles/${circle.id}` : undefined,
+  logo: siteOrigin ? `${siteOrigin}${circle.image}` : undefined,
+  sameAs: [circle.social?.x, circle.social?.instagram].filter(Boolean)
+});
 
 /** JSON-LD: パンくず */
 const breadcrumbLd = {
   "@context": "https://schema.org",
   "@type": "BreadcrumbList",
   "itemListElement": [
-    { "@type": "ListItem", "position": 1, "name": "Home",    ...(siteUrl ? { "item": siteUrl } : {}) },
-    { "@type": "ListItem", "position": 2, "name": "Circles", ...(siteUrl ? { "item": `${siteUrl}/circles` } : {}) },
-    { "@type": "ListItem", "position": 3, "name": circle.name, ...(siteUrl ? { "item": `${siteUrl}/circles/${circle.id}` } : {}) }
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      ...(siteOrigin ? { "item": siteOrigin } : {})
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Circles",
+      ...(siteOrigin ? { "item": `${siteOrigin}/circles` } : {})
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": circle.name,
+      ...(siteOrigin ? { "item": `${siteOrigin}/circles/${circle.id}` } : {})
+    }
   ]
 };
 ---
 
-<BaseLayout title={pageTitle} lang="ja" meta_description={pageDesc}>
-  <!-- JSON-LD -->
-  <script type="application/ld+json">{JSON.stringify(orgLd)}</script>
-  <script type="application/ld+json">{JSON.stringify(breadcrumbLd)}</script>
+<BaseLayout title={pageTitle} lang="ja" description={pageDesc}>
+  <!-- JSON-LD: Organization / Breadcrumb -->
+  <JsonLd data={[orgLd, breadcrumbLd]} />
 
   <section class="max-w-5xl mx-auto px-4 py-8 md:py-12">
     <!-- パンくず / タイトル -->
     <div class="mb-6">
       <nav class="text-xs text-gray-500 mb-2">
-        <a class="hover:underline" href="/">Home</a> /
-        <a class="hover:underline" href="/circles">Circles</a> /
-        <span>{circle.name}</span>
+        <a class="hover:underline" href="/">Home</a> / <a class="hover:underline" href="/circles">Circles</a> / <span>{circle.name}</span>
       </nav>
       <h1 class="text-2xl md:text-4xl font-extrabold">{circle.name}</h1>
-      <div class="mt-2 flex flex-wrap gap-2 text-sm text-gray-600">
-        <span>📍 活動エリア: {circle.areaText}</span>
-        <span>・👥 メンバー: {circle.memberCount}名</span>
-        {circle.isPickup && <span class="px-2 py-0.5 bg-indigo-600 text-white rounded-full text-xs">ピックアップ</span>}
+      <div class="mt-2 text-sm text-gray-600 space-y-1">
+        <div>🧭 活動エリア: {circle.areaText}</div>
+        <div>👥 メンバー数: {circle.memberCount}人</div>
       </div>
       <div class="mt-2 flex flex-wrap gap-2">
         {circle.tags?.map((t) => <span class="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-xs">{t}</span>)}
       </div>
     </div>
 
-    <!-- メイン 2カラム -->
     <div class="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-6">
-      <!-- 左：概要 -->
+      <!-- メイン -->
       <article class="bg-white rounded-2xl shadow p-5 md:p-7">
         <img src={circle.image} alt={circle.name} class="rounded-xl w-full h-56 object-cover mb-4" loading="lazy" />
-        <h2 class="text-lg md:text-xl font-bold mb-2">サークル概要</h2>
+        <h2 class="text-lg md:text-xl font-bold mb-2">サークル紹介</h2>
         <p class="text-gray-700 leading-relaxed">{circle.intro}</p>
 
         <h3 class="mt-6 font-semibold">活動情報</h3>
         <ul class="mt-2 text-sm text-gray-700 space-y-1">
-          <li>📍 エリア: {circle.areaText}</li>
-          <li>👥 メンバー: {circle.memberCount}名</li>
+          <li>🗺️ 主なエリア: {circle.areaText}</li>
+          <li>👥 メンバー数: {circle.memberCount}人</li>
           <li>🏷️ タグ: {circle.tags?.join(" / ")}</li>
-          <li>📧 連絡先: {circle.contactEmail}</li>
-          {circle.website && <li>🔗 サイト: <a class="text-indigo-700 underline" href={circle.website} rel="noopener">外部サイト</a></li>}
         </ul>
 
         <div class="mt-6 flex gap-3">
-          <a href={`/search?type=event&q=${encodeURIComponent(circle.tags?.[0] ?? "")}`} class="bg-indigo-600 text-white px-5 py-2 rounded-xl shadow hover:bg-indigo-700 transition">
-            関連イベントを探す
-          </a>
-          <a href="/search?type=circle" class="px-5 py-2 rounded-xl border hover:bg-gray-50 transition">他のサークルを見る</a>
+          <a href={`/search?type=event&q=${encodeURIComponent(circle.name)}`} class="px-5 py-2 rounded-xl border hover:bg-gray-50 transition">このサークルのイベントを探す</a>
+          <a href="/vendor/new" class="bg-indigo-600 text-white px-5 py-2 rounded-xl shadow hover:bg-indigo-700 transition">サークルに問い合わせ</a>
         </div>
       </article>
 
-      <!-- 右：案内/ルール -->
+      <!-- サイド -->
       <aside class="space-y-4">
         <div class="bg-white rounded-2xl shadow p-5">
-          <h3 class="font-semibold mb-2">参加ルール</h3>
-          <ul class="text-sm text-gray-700 list-disc pl-5 space-y-1">
-            <li>初心者歓迎・経験不問（安全第一でお願いします）。</li>
-            <li>未成年は保護者の同意が必要です。</li>
-            <li>迷惑行為・勧誘は厳禁。運営判断で参加をお断りする場合があります。</li>
+          <h3 class="font-semibold mb-2">リンク</h3>
+          <ul class="text-sm text-indigo-700 space-y-1">
+            <li><a class="hover:underline" href="/events">イベント一覧</a></li>
+            <li><a class="hover:underline" href="/places">開催場所一覧</a></li>
           </ul>
+          {circle.social?.x && (<p class="text-xs text-gray-500 mt-2">X: <a class="text-indigo-700 hover:underline" href={circle.social.x}>{circle.social.x}</a></p>)}
+          {circle.social?.instagram && (<p class="text-xs text-gray-500">Instagram: <a class="text-indigo-700 hover:underline" href={circle.social.instagram}>{circle.social.instagram}</a></p>)}
         </div>
 
-        <div class="bg-white rounded-2xl shadow p-5">
-          <h3 class="font-semibold mb-2">問い合わせ</h3>
-          <p class="text-sm text-gray-700">
-            サークルへの連絡は <a class="text-indigo-700 underline" href="/contact">/contact</a> から、件名にサークル名を記載のうえお送りください。
-          </p>
-        </div>
-
-        <a href="/" class="block text-center text-indigo-700 underline">トップへ戻る</a>
+        <a href="/circles" class="block text-center text-indigo-700 underline">サークル一覧へ戻る</a>
       </aside>
     </div>
   </section>
 </BaseLayout>
+
