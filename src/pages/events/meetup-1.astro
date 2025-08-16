@@ -1,78 +1,158 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import JsonLd from "../../components/JsonLd.astro";
+import { buildOrganization, buildPlace, buildEvent } from "../../lib/schema";
 
-// ▼ 必要に応じて書き換え
-const EVENT = {
-  name: "MinnaCircle Meetup #1",
-  description: "趣味を通じた交流ミートアップ。",
-  // ISO 8601（日本時間は +09:00）
-  start: "2025-09-20T14:00:00+09:00",
-  end: "2025-09-20T17:00:00+09:00",
-  url: "https://minna-circle.vercel.app/events/meetup-1",
-  image: "https://minna-circle.vercel.app/og.png",
-  venueName: "MinnaCircle Base",
+/** ▼ このページ専用の静的イベント情報（必要に応じて編集） */
+const event = {
+  id: "meetup-1",
+  title: "週末ミートアップ＆交流会",
+  description:
+    "ゆるく集まって自己紹介＆交流。初参加歓迎！お子さま連れもOKです。軽いアイスブレイクとミニゲームをご用意します。",
+  image: "/og.png",
+  dateText: "2025-09-13 15:00",
+  endText:  "2025-09-13 17:00",
+  placeText: "清澄白河 カフェラウンジ（集合）",
+  areaText: "江東区",
+  fee: 500,
+  capacity: 16,
+  organizer: "MinnaCircle Community",
+  tags: ["交流会","初参加歓迎","親子OK"]
+};
+
+/** メタ */
+const pageTitle = `${event.title} | MinnaCircle`;
+const pageDesc  = event.description;
+
+/** サイトOrigin（astro.configのsiteがあれば使用） */
+const siteOrigin = (Astro.site && Astro.site.href) ? Astro.site.href.replace(/\/$/, "") : "";
+
+/** "YYYY-MM-DD HH:mm" → "YYYY-MM-DDTHH:mm:00+09:00"（JSTのまま出力） */
+const toJstOffset = (s: string) => {
+  const [date, hm] = s.split(" ");
+  return `${date}T${hm}:00+09:00`;
+};
+
+/** Organizer / Place / Event の JSON-LD（schema.ts を使用） */
+const organizer = buildOrganization({
+  name: event.organizer,
+  url: siteOrigin || undefined,
+});
+
+const place = buildPlace({
+  name: event.placeText,
+  addressLocality: event.areaText,
   addressCountry: "JP",
-  price: "0",
-  priceCurrency: "JPY"
+});
+
+const schemaEvent = buildEvent({
+  name: event.title,
+  description: event.description,
+  startDate: toJstOffset(event.dateText),
+  endDate: event.endText ? toJstOffset(event.endText) : undefined,
+  organizer,
+  location: place,
+  image: [event.image],
+  offers: {
+    price: String(event.fee),
+    priceCurrency: "JPY",
+    url: siteOrigin ? `${siteOrigin}/events/${event.id}/join` : undefined,
+    availability: "InStock",
+  },
+});
+
+/** JSON-LD: パンくず */
+const breadcrumbLd = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      ...(siteOrigin ? { "item": siteOrigin } : {})
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Events",
+      ...(siteOrigin ? { "item": `${siteOrigin}/events` } : {})
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": event.title,
+      ...(siteOrigin ? { "item": `${siteOrigin}/events/${event.id}` } : {})
+    }
+  ]
 };
 ---
 
-<BaseLayout
-  title={`${EVENT.name} | MinnaCircle`}
-  description={EVENT.description}
-  path="/events/meetup-1"
-  lang="ja"
->
-  <section class="max-w-3xl mx-auto px-4 py-10 space-y-6">
-    <h1 class="text-2xl md:text-3xl font-bold">{EVENT.name}</h1>
-    <p>{EVENT.description}</p>
+<BaseLayout title={pageTitle} lang="ja" description={pageDesc}>
+  <!-- JSON-LD: Event / Breadcrumb -->
+  <JsonLd data={[schemaEvent, breadcrumbLd]} />
 
-    <div class="grid gap-2 text-sm text-gray-700">
-      <div><span class="font-semibold">開始:</span> {EVENT.start}</div>
-      <div><span class="font-semibold">終了:</span> {EVENT.end}</div>
-      <div><span class="font-semibold">会場:</span> {EVENT.venueName}</div>
-      <div><span class="font-semibold">参加費:</span> {EVENT.price} {EVENT.priceCurrency}</div>
+  <section class="max-w-5xl mx-auto px-4 py-8 md:py-12">
+    <!-- パンくず / タイトル -->
+    <div class="mb-6">
+      <nav class="text-xs text-gray-500 mb-2">
+        <a class="hover:underline" href="/">Home</a> / <a class="hover:underline" href="/events">Events</a> / <span>{event.title}</span>
+      </nav>
+      <h1 class="text-2xl md:text-4xl font-extrabold">{event.title}</h1>
+      <div class="mt-2 flex flex-wrap gap-2 text-sm text-gray-600">
+        <span>📅 {event.dateText}{event.endText ? ` 〜 ${event.endText}` : ""}</span>
+        <span>・📍 {event.placeText}（{event.areaText}）</span>
+        <span>・💴 {event.fee === 0 ? "無料" : `参加費: ¥${event.fee.toLocaleString()}`}</span>
+        {event.capacity && (<span>・👥 定員: {event.capacity}名</span>)}
+      </div>
+      <div class="mt-2 flex flex-wrap gap-2">
+        {event.tags?.map((t) => <span class="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-xs">{t}</span>)}
+      </div>
     </div>
 
-    <a href="/"
-       class="inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-      トップに戻る
-    </a>
-  </section>
+    <!-- 本文 -->
+    <div class="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-6">
+      <!-- 詳細 -->
+      <article class="bg-white rounded-2xl shadow p-5 md:p-7">
+        <img src={event.image} alt={event.title} class="rounded-xl w-full h-56 object-cover mb-4" loading="lazy" />
+        <h2 class="text-lg md:text-xl font-bold mb-2">イベント概要</h2>
+        <p class="text-gray-700 leading-relaxed">{event.description}</p>
 
-  <!-- Event schema.org JSON-LD -->
-  <script type="application/ld+json">
-    {JSON.stringify({
-      "@context": "https://schema.org",
-      "@type": "Event",
-      "name": EVENT.name,
-      "description": EVENT.description,
-      "eventStatus": "https://schema.org/EventScheduled",
-      "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
-      "startDate": EVENT.start,
-      "endDate": EVENT.end,
-      "url": EVENT.url,
-      "location": {
-        "@type": "Place",
-        "name": EVENT.venueName,
-        "address": {
-          "@type": "PostalAddress",
-          "addressCountry": EVENT.addressCountry
-        }
-      },
-      "organizer": {
-        "@type": "Organization",
-        "name": "MinnaCircle",
-        "url": "https://minna-circle.vercel.app"
-      },
-      "image": [EVENT.image],
-      "offers": {
-        "@type": "Offer",
-        "price": EVENT.price,
-        "priceCurrency": EVENT.priceCurrency,
-        "availability": "https://schema.org/InStock",
-        "url": EVENT.url
-      }
-    })}
-  </script>
+        <h3 class="mt-6 font-semibold">開催情報</h3>
+        <ul class="mt-2 text-sm text-gray-700 space-y-1">
+          <li>📅 開催日時: {event.dateText}{event.endText ? ` 〜 ${event.endText}` : ""}</li>
+          <li>📍 会場: {event.placeText}（{event.areaText}）</li>
+          <li>💴 参加費: {event.fee === 0 ? "無料" : `¥${event.fee.toLocaleString()}`}</li>
+          {event.capacity && (<li>👥 定員: {event.capacity}名</li>)}
+          <li>🏷️ タグ: {event.tags?.join(" / ")}</li>
+          <li>🧑‍🤝‍🧑 主催: {event.organizer}</li>
+        </ul>
+
+        <div class="mt-6 flex gap-3">
+          <a href={`/events/${event.id}/join`} class="bg-indigo-600 text-white px-5 py-2 rounded-xl shadow hover:bg-indigo-700 transition">参加申し込みへ</a>
+          <a href="/search?type=event" class="px-5 py-2 rounded-xl border hover:bg-gray-50 transition">他のイベントを探す</a>
+        </div>
+      </article>
+
+      <!-- サイド -->
+      <aside class="space-y-4">
+        <div class="bg-white rounded-2xl shadow p-5">
+          <h3 class="font-semibold mb-2">開催地</h3>
+          <p class="text-sm text-gray-700">{event.placeText}（{event.areaText}）</p>
+          <p class="text-xs text-gray-500 mt-1">※住所詳細や地図は主催者が公開範囲を設定します。</p>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow p-5">
+          <h3 class="font-semibold mb-2">注意事項</h3>
+          <ul class="text-sm text-gray-700 list-disc pl-5 space-y-1">
+            <li>体調不良時は無理せず参加をお控えください。</li>
+            <li>未成年の方は保護者の同意が必要です。</li>
+            <li>キャンセルポリシーの上限は参加費100%です。</li>
+          </ul>
+        </div>
+
+        <a href="/" class="block text-center text-indigo-700 underline">トップへ戻る</a>
+      </aside>
+    </div>
+  </section>
 </BaseLayout>
