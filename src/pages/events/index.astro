@@ -1,127 +1,113 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
-import EventCard from "../../components/EventCard.astro";
+import JsonLd from "../../components/JsonLd.astro";
 
-/** ダミーデータ（詳細ページと整合） */
+/**
+ * ダミーデータ（詳細ページと同一IDを使用）
+ * 実データ接続時は API/DB から取得してください。
+ */
 const allEvents = [
-  { id:"ev-001", title:"朝活ランニング＠木場公園", description:"初心者歓迎。会話しながら軽く3km！", image:"/og.png", dateText:"2025-09-01 07:00", placeText:"木場公園集合", areaText:"江東区", isFeatured:true,  createdAt:"2025-08-10T08:00:00+09:00", fee:0,   popularity:78, tags:["ランニング","初心者歓迎","朝活"] },
-  { id:"ev-002", title:"週末バスケ個人参加",       description:"経験不問。楽しく汗をかきましょう！", image:"/og.png", dateText:"2025-09-06 18:00", placeText:"江東区スポセン", areaText:"江東区", isFeatured:false, createdAt:"2025-08-14T18:00:00+09:00", fee:800, popularity:120, tags:["バスケ","個サル","初心者歓迎"] },
-  { id:"ev-003", title:"英会話ゆるカフェ会",       description:"カジュアルに英会話。お子様連れOK。", image:"/og.png", dateText:"2025-09-07 10:00", placeText:"清澄白河", areaText:"江東区", isFeatured:false, createdAt:"2025-08-12T12:00:00+09:00", fee:500, popularity:64,  tags:["英会話","カフェ","親子OK"] }
+  {
+    id: "ev-001",
+    title: "朝活ランニング＠木場公園",
+    description: "初心者歓迎。会話しながら軽く3km！ウォームアップ→ゆるラン→ストレッチの流れです。",
+    image: "/og.png",
+    dateText: "2025-09-01 07:00",
+    endText:  "2025-09-01 08:00",
+    placeText: "木場公園集合",
+    areaText: "江東区",
+    fee: 0,
+    capacity: 20,
+    organizer: "MinnaCircle Running",
+    createdAt: "2025-08-10T08:00:00+09:00",
+    tags: ["ランニング","初心者歓迎","朝活"]
+  },
+  {
+    id: "ev-002",
+    title: "週末バスケ個人参加",
+    description: "経験不問。チーム分け→スクリメージ中心。怪我防止のため準備運動を各自でお願いします。",
+    image: "/og.png",
+    dateText: "2025-09-06 18:00",
+    endText:  "2025-09-06 20:00",
+    placeText: "江東区スポセン",
+    areaText: "江東区",
+    fee: 800,
+    capacity: 30,
+    organizer: "MinnaCircle Basketball",
+    createdAt: "2025-08-14T18:00:00+09:00",
+    tags: ["バスケ","個サル","初心者歓迎"]
+  },
+  {
+    id: "ev-003",
+    title: "英会話ゆるカフェ会",
+    description: "カジュアル英会話。レベル不問。子連れ可。スモールトークのテーマカードを用意します。",
+    image: "/og.png",
+    dateText: "2025-09-07 10:00",
+    endText:  "2025-09-07 11:30",
+    placeText: "清澄白河",
+    areaText: "江東区",
+    fee: 500,
+    capacity: 12,
+    organizer: "MinnaCircle English",
+    createdAt: "2025-08-12T12:00:00+09:00",
+    tags: ["英会話","カフェ","親子OK"]
+  }
 ];
 
-/** クエリ取得 */
-const url = new URL(Astro.request.url);
-const q = (url.searchParams.get("q") ?? "").toLowerCase();
-const area = (url.searchParams.get("area") ?? "").toLowerCase();
-const sort = (url.searchParams.get("sort") ?? "date").toLowerCase(); // date|recent|popular|fee
+/** メタ */
+const pageTitle = "イベント一覧 | MinnaCircle";
+const pageDesc  = "MinnaCircleの最新イベント一覧。日時・場所・費用から検索できます。";
 
-/** ユーティリティ */
-const parseDate = (s: string) => new Date(s.replace(" ", "T")).getTime();
-const norm = (s: string) => (s ?? "").toLowerCase();
+/** サイトOrigin（astro.configのsiteがあれば使用） */
+const siteOrigin = (Astro.site && Astro.site.href) ? Astro.site.href.replace(/\/$/, "") : "";
 
-/** フィルタ */
-const hit = (ev) =>
-  (!q || norm(ev.title).includes(q) || norm(ev.description).includes(q) || norm(ev.placeText).includes(q) || ev.tags?.some(t => norm(t).includes(q))) &&
-  (!area || norm(ev.areaText).includes(area));
-
-/** ソート */
-const byDesc = (a,b) => b-a, byAsc = (a,b) => a-b;
-const sortEvents = (list) => {
-  switch (sort) {
-    case "recent":  return [...list].sort((a,b)=>byDesc(parseDate(a.createdAt), parseDate(b.createdAt)));
-    case "popular": return [...list].sort((a,b)=>byDesc(a.popularity, b.popularity));
-    case "fee":     return [...list].sort((a,b)=>byAsc(a.fee, b.fee));
-    case "date":
-    default:        return [...list].sort((a,b)=>byAsc(parseDate(a.dateText), parseDate(b.dateText)));
-  }
-};
-
-const events = sortEvents(allEvents.filter(hit));
-
-/** クエリ生成 */
-const withQS = (patch: Record<string,string>) => {
-  const u = new URL(url);
-  Object.entries(patch).forEach(([k,v]) => {
-    if (!v) u.searchParams.delete(k); else u.searchParams.set(k,v);
-  });
-  return `${u.pathname}?${u.searchParams.toString()}`;
-};
-
-/** JSON-LD（CollectionPage + ItemList） */
-const siteUrl = (Astro.site && Astro.site.href) ? Astro.site.href.replace(/\/$/, "") : "";
-const collectionLd = {
-  "@context": "https://schema.org",
-  "@type": "CollectionPage",
-  "name": "イベント一覧 - MinnaCircle",
-  ...(siteUrl ? { "url": `${siteUrl}/events` } : {}),
-  "description": "開催予定のイベント一覧ページ。開催日が近い順・新着順などで並び替え可能。"
-};
+/** ItemList JSON-LD を生成 */
 const itemListLd = {
   "@context": "https://schema.org",
   "@type": "ItemList",
-  "itemListOrder": (sort === "date" ? "http://schema.org/ItemListOrderAscending" : "http://schema.org/ItemListOrderDescending"),
-  "numberOfItems": events.length,
-  "itemListElement": events.map((ev, idx) => ({
+  "name": "MinnaCircle Events",
+  "itemListElement": allEvents.map((e, i) => ({
     "@type": "ListItem",
-    "position": idx + 1,
-    "url": siteUrl ? `${siteUrl}/events/${ev.id}` : undefined,
-    "name": ev.title
+    "position": i + 1,
+    "name": e.title,
+    ...(siteOrigin ? { "url": `${siteOrigin}/events/${e.id}` } : {}),
+    "image": e.image,
+    "description": e.description
   }))
 };
 ---
 
-<BaseLayout title="Events | MinnaCircle" lang="ja" meta_description="開催予定のイベント一覧（並び替え・簡易フィルタ対応）">
-  <!-- JSON-LD投入 -->
-  <script type="application/ld+json">{JSON.stringify(collectionLd)}</script>
-  <script type="application/ld+json">{JSON.stringify(itemListLd)}</script>
+<BaseLayout title={pageTitle} lang="ja" description={pageDesc}>
+  <!-- JSON-LD: ItemList（イベント一覧） -->
+  <JsonLd data={itemListLd} />
 
   <section class="max-w-6xl mx-auto px-4 py-8 md:py-12">
-    <header class="mb-6">
-      <h1 class="text-2xl md:text-3xl font-extrabold">イベント一覧</h1>
-      <p class="text-gray-600 mt-1">開催予定のイベントを一覧で確認できます。</p>
-    </header>
+    <h1 class="text-2xl md:text-3xl font-extrabold mb-6">イベント一覧</h1>
 
-    <!-- フィルタ/ソート -->
-    <form action="/events" method="get" class="grid grid-cols-1 md:grid-cols-[1fr_160px_140px_auto] gap-2 items-center mb-4">
-      <input name="q" type="search" placeholder="キーワード（例：バスケ/英会話/木場）" value={q} class="rounded-xl border px-4 py-2" />
-      <input name="area" type="text" placeholder="エリア（例：江東区）" value={area} class="rounded-xl border px-4 py-2" />
-      <select name="sort" class="rounded-xl border px-3 py-2">
-        <option value="date"     selected={sort==="date"}>開催日が近い順</option>
-        <option value="recent"   selected={sort==="recent"}>新着順</option>
-        <option value="popular"  selected={sort==="popular"}>人気順</option>
-        <option value="fee"      selected={sort==="fee"}>参加費の安い順</option>
-      </select>
-      <div class="flex gap-2">
-        <button class="bg-indigo-600 text-white px-5 py-2 rounded-xl shadow hover:bg-indigo-700 transition">適用</button>
-        <a href="/events" class="px-4 py-2 rounded-xl border hover:bg-gray-50 transition">クリア</a>
-      </div>
-    </form>
-
-    <!-- クイック並び替え -->
-    <div class="flex flex-wrap gap-2 text-xs md:text-sm mb-4">
-      <a class="px-3 py-1 rounded-full border hover:bg-gray-50" href={withQS({ sort:"date" })}>開催日が近い順</a>
-      <a class="px-3 py-1 rounded-full border hover:bg-gray-50" href={withQS({ sort:"recent" })}>新着順</a>
-      <a class="px-3 py-1 rounded-full border hover:bg-gray-50" href={withQS({ sort:"popular" })}>人気順</a>
-      <a class="px-3 py-1 rounded-full border hover:bg-gray-50" href={withQS({ sort:"fee" })}>参加費の安い順</a>
+    <!-- 検索/ソートUI（簡易） -->
+    <div class="mb-6 flex flex-wrap gap-3 text-sm">
+      <a href="/search?type=event" class="px-4 py-2 rounded-xl border hover:bg-gray-50">詳細検索へ</a>
     </div>
 
-    <!-- 件数 -->
-    <p class="text-sm text-gray-500 mb-3">該当件数: {events.length}</p>
-
-    <!-- 一覧 -->
-    {events.length > 0 ? (
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-        {events.map(ev => (<EventCard event={ev} />))}
-      </div>
-    ) : (
-      <div class="rounded-2xl border p-6 text-center text-gray-600">該当するイベントが見つかりませんでした。</div>
-    )}
-
-    <!-- 導線 -->
-    <div class="mt-8 flex flex-wrap gap-3">
-      <a href="/search?type=event" class="px-5 py-2 rounded-xl border hover:bg-gray-50 transition">詳細検索へ</a>
-      <a href="/" class="text-indigo-700 underline px-3 py-2">トップへ戻る</a>
+    <!-- グリッド表示 -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {allEvents.map((e) => (
+        <a href={`/events/${e.id}`} class="block bg-white rounded-2xl shadow hover:shadow-md transition">
+          <img src={e.image} alt={e.title} class="rounded-t-2xl w-full h-40 object-cover" loading="lazy" />
+          <div class="p-4">
+            <h2 class="font-bold line-clamp-2">{e.title}</h2>
+            <p class="text-sm text-gray-600 mt-1 line-clamp-2">{e.description}</p>
+            <div class="mt-2 text-xs text-gray-500 space-y-1">
+              <div>📅 {e.dateText}{e.endText ? ` 〜 ${e.endText}` : ""}</div>
+              <div>📍 {e.placeText}（{e.areaText}）</div>
+              {Number.isFinite(e.fee) && (<div>💴 {e.fee === 0 ? "無料" : `¥${e.fee.toLocaleString()}`}</div>)}
+            </div>
+            <div class="mt-2 flex flex-wrap gap-1">
+              {e.tags?.map((t) => <span class="px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded-full text-[11px]">{t}</span>)}
+            </div>
+          </div>
+        </a>
+      ))}
     </div>
   </section>
 </BaseLayout>
-
