@@ -1,0 +1,78 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+// ▼ 必要に応じて書き換え
+const EVENT = {
+  name: "MinnaCircle Meetup #1",
+  description: "趣味を通じた交流ミートアップ。",
+  // ISO 8601（日本時間は +09:00）
+  start: "2025-09-20T14:00:00+09:00",
+  end: "2025-09-20T17:00:00+09:00",
+  url: "https://minna-circle.vercel.app/events/meetup-1",
+  image: "https://minna-circle.vercel.app/og.png",
+  venueName: "MinnaCircle Base",
+  addressCountry: "JP",
+  price: "0",
+  priceCurrency: "JPY"
+};
+---
+
+<BaseLayout
+  title={`${EVENT.name} | MinnaCircle`}
+  description={EVENT.description}
+  path="/events/meetup-1"
+  lang="ja"
+>
+  <section class="max-w-3xl mx-auto px-4 py-10 space-y-6">
+    <h1 class="text-2xl md:text-3xl font-bold">{EVENT.name}</h1>
+    <p>{EVENT.description}</p>
+
+    <div class="grid gap-2 text-sm text-gray-700">
+      <div><span class="font-semibold">開始:</span> {EVENT.start}</div>
+      <div><span class="font-semibold">終了:</span> {EVENT.end}</div>
+      <div><span class="font-semibold">会場:</span> {EVENT.venueName}</div>
+      <div><span class="font-semibold">参加費:</span> {EVENT.price} {EVENT.priceCurrency}</div>
+    </div>
+
+    <a href="/"
+       class="inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+      トップに戻る
+    </a>
+  </section>
+
+  <!-- Event schema.org JSON-LD -->
+  <script type="application/ld+json">
+    {JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "Event",
+      "name": EVENT.name,
+      "description": EVENT.description,
+      "eventStatus": "https://schema.org/EventScheduled",
+      "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+      "startDate": EVENT.start,
+      "endDate": EVENT.end,
+      "url": EVENT.url,
+      "location": {
+        "@type": "Place",
+        "name": EVENT.venueName,
+        "address": {
+          "@type": "PostalAddress",
+          "addressCountry": EVENT.addressCountry
+        }
+      },
+      "organizer": {
+        "@type": "Organization",
+        "name": "MinnaCircle",
+        "url": "https://minna-circle.vercel.app"
+      },
+      "image": [EVENT.image],
+      "offers": {
+        "@type": "Offer",
+        "price": EVENT.price,
+        "priceCurrency": EVENT.priceCurrency,
+        "availability": "https://schema.org/InStock",
+        "url": EVENT.url
+      }
+    })}
+  </script>
+</BaseLayout>
