@@ -1,4 +1,5 @@
 User-agent: *
-Allow: /
+Allow: 
+/
 
-Sitemap: https://minna-circle.vercel.app/sitemap.xml
+Sitemap: https://minna-circle.vercel.app/xl
