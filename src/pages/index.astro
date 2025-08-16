@@ -146,16 +146,22 @@ const FEATURED_EVENTS = EVENTS.slice(0, 2);
     </div>
   </section>
 
+  <!-- データを安全に埋め込む（JSON script + 読み取り） -->
+  <script type="application/json" id="circles-data">
+    {JSON.stringify(CIRCLES)}
+  </script>
+
   <!-- クライアント側簡易フィルタ（v1） -->
   <script>
-    const DATA = JSON.parse(`<?= JSON.stringify(CIRCLES) ?>`);
     const grid = document.getElementById("resultGrid");
     const count = document.getElementById("resultCount");
     const form = document.getElementById("searchForm");
 
-    function arr(v) { return Array.isArray(v) ? v : [v]; }
+    // JSON-LDスクリプトからデータ読込（サーバー値を素直に渡す）
+    const DATA = JSON.parse(document.getElementById("circles-data").textContent);
+
     function getChecked(name) {
-      return [...form.querySelectorAll(\`input[name="\${name}"]:checked\`)].map(i => i.value);
+      return [...form.querySelectorAll(`input[name="${name}"]:checked`)].map(i => i.value);
     }
 
     function render(list) {
@@ -184,13 +190,13 @@ const FEATURED_EVENTS = EVENTS.slice(0, 2);
       const area = form.area.value;
 
       const hit = DATA.filter(c => {
-        if (q && !`${c.name} ${c.category} ${c.area} ${c.tags?.join(" ")}`.includes(q)) return false;
+        if (q && !`${c.name} ${c.category} ${c.area} ${(c.tags||[]).join(" ")}`.includes(q)) return false;
         if (area && c.area !== area) return false;
         if (categories.length && !categories.includes(c.category)) return false;
         if (genders.length && !genders.includes(c.gender)) return false;
         if (levels.length && !levels.includes(c.level)) return false;
-        if (weekdays.length && !weekdays.some(d => c.weekday?.includes(d))) return false;
-        if (times.length && !times.some(t => c.time?.includes(t))) return false;
+        if (weekdays.length && !weekdays.some(d => (c.weekday||[]).includes(d))) return false;
+        if (times.length && !times.some(t => (c.time||[]).includes(t))) return false;
         return true;
       });
 
