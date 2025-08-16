@@ -24,6 +24,12 @@ const contactPointLd = {
     ...(siteUrl ? { "url": `${siteUrl}/contact` } : {})
   }]
 };
+
+/** ▼ GASエンドポイント
+ *  環境変数から参照（.env で PUBLIC_GAS_CONTACT_ENDPOINT を設定）
+ *  例）PUBLIC_GAS_CONTACT_ENDPOINT="https://script.google.com/macros/s/AKfycb.../exec"
+ */
+const GAS_ENDPOINT = import.meta.env.PUBLIC_GAS_CONTACT_ENDPOINT || "";
 ---
 
 <BaseLayout title={title} lang="ja" meta_description={description}>
@@ -39,15 +45,17 @@ const contactPointLd = {
       </p>
     </header>
 
-    <!-- 完了メッセージ（ダミー送信で表示） -->
+    <!-- 成功/失敗メッセージ -->
     <div id="contact-success" class="hidden bg-green-50 border border-green-200 text-green-800 rounded-xl p-4 mb-6">
-      送信ありがとうございました。内容を受け付けました。（デモ動作）<br />
-      ※本番では送信内容をスプレッドシートに保存し、通知を行います。
+      送信ありがとうございました。内容を受け付けました。
+    </div>
+    <div id="contact-error" class="hidden bg-red-50 border border-red-200 text-red-800 rounded-xl p-4 mb-6">
+      送信に失敗しました。しばらくしてから再度お試しください。
     </div>
 
-    <!-- お問い合わせフォーム（ダミー送信） -->
-    <form id="contact-form" class="bg-white rounded-2xl shadow p-6 md:p-8 space-y-5" novalidate>
-      <!-- CSRF風/スパム対策（ハニーポット） -->
+    <!-- お問い合わせフォーム（GASにPOST） -->
+    <form id="contact-form" class="bg-white rounded-2xl shadow p-6 md:p-8 space-y-5" novalidate data-endpoint={GAS_ENDPOINT}>
+      <!-- ハニーポット -->
       <input type="text" name="website" class="hidden" tabindex="-1" autocomplete="off" />
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -99,7 +107,7 @@ const contactPointLd = {
       <fieldset class="rounded-xl border px-4 py-3">
         <legend class="text-sm font-medium">添付予定（任意）</legend>
         <div class="text-xs text-gray-600 mt-1">
-          画像や資料の添付がある場合は、このフォーム送信後に別途ご案内するメール宛にお送りください。
+          画像や資料の添付がある場合は、送信後にご案内するメール宛にお送りください。
         </div>
       </fieldset>
 
@@ -112,7 +120,7 @@ const contactPointLd = {
       </div>
 
       <div class="flex gap-3 pt-2">
-        <button type="submit" class="bg-indigo-600 text-white px-5 py-2 rounded-xl shadow hover:bg-indigo-700 transition">
+        <button id="submit-btn" type="submit" class="bg-indigo-600 text-white px-5 py-2 rounded-xl shadow hover:bg-indigo-700 transition">
           送信
         </button>
         <button type="reset" class="px-5 py-2 rounded-xl border hover:bg-gray-50 transition">
@@ -132,41 +140,85 @@ const contactPointLd = {
     </section>
   </section>
 
-  <!-- 最小限のクライアントスクリプト（ダミー送信 & 文字数カウント） -->
+  <!-- クライアントスクリプト（GAS POST / 文字数カウント） -->
   <script>
     // 文字数カウンタ
     (function () {
       const msg = document.getElementById('message');
       const counter = document.getElementById('message-count');
-      if (msg && counter) {
-        const update = () => (counter.textContent = (msg.value.length || 0) + " / 1000");
-        msg.addEventListener('input', update);
-        update();
-      }
+      if (!msg || !counter) return;
+      const update = () => (counter.textContent = (msg.value.length || 0) + " / 1000");
+      msg.addEventListener('input', update);
+      update();
     })();
 
-    // ダミー送信（将来 Apps Script 等に差し替え）
+    // GAS 送信
     (function () {
       const form = document.getElementById('contact-form');
       const success = document.getElementById('contact-success');
+      const errorBox = document.getElementById('contact-error');
+      const submitBtn = document.getElementById('submit-btn');
       if (!form) return;
-      form.addEventListener('submit', (e) => {
+
+      const endpoint = form.getAttribute('data-endpoint') || "";
+      form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        // 簡易バリデーション
+        // ハニーポット
         const data = new FormData(form);
-        if ((data.get('website') || '').toString().trim() !== "") return; // ハニーポット
+        if ((data.get('website') || '').toString().trim() !== "") return;
+
+        // 必須チェック
         if (!data.get('name') || !data.get('email') || !data.get('topic') || !data.get('message') || !data.get('agree')) {
           alert('必須項目を入力してください。');
           return;
         }
-        // 成功表示
-        success?.classList.remove('hidden');
-        form.reset();
-        // カウンタ初期化
-        const counter = document.getElementById('message-count');
-        if (counter) counter.textContent = "0 / 1000";
-        // ページ先頭へ
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        if (!endpoint) {
+          alert('送信先が未設定です。管理者に連絡してください。');
+          return;
+        }
+
+        // 送信中UI
+        submitBtn?.setAttribute('disabled', 'true');
+        submitBtn?.classList.add('opacity-60', 'cursor-not-allowed');
+
+        try {
+          const payload = {
+            name: data.get('name'),
+            email: data.get('email'),
+            topic: data.get('topic'),
+            lang: data.get('lang') || 'ja',
+            message: data.get('message'),
+            agree: !!data.get('agree'),
+            path: window.location.pathname,
+            ua: navigator.userAgent,
+            ts: new Date().toISOString()
+          };
+
+          const res = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+            mode: 'cors',
+            redirect: 'follow'
+          });
+
+          if (!res.ok) throw new Error('bad status ' + res.status);
+          success?.classList.remove('hidden');
+          errorBox?.classList.add('hidden');
+          form.reset();
+          // カウンタ初期化
+          const counter = document.getElementById('message-count');
+          if (counter) counter.textContent = "0 / 1000";
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        } catch (err) {
+          console.error(err);
+          errorBox?.classList.remove('hidden');
+          success?.classList.add('hidden');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        } finally {
+          submitBtn?.removeAttribute('disabled');
+          submitBtn?.classList.remove('opacity-60', 'cursor-not-allowed');
+        }
       });
     })();
   </script>
