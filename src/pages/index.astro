@@ -18,6 +18,9 @@ const CIRCLES = [
     ageGroup: ["小学生"],
     monthlyFee: 2000,
     joinFee: 0,
+    trialAvailable: true,           // 体験可
+    immediateJoin: false,           // 即参加可
+    frequency: ["週1回"],           // 活動頻度
     tags: ["体験可"],
     img: "/og.png"
   },
@@ -36,6 +39,9 @@ const CIRCLES = [
     ageGroup: ["中学生"],
     monthlyFee: 3000,
     joinFee: 1000,
+    trialAvailable: false,
+    immediateJoin: true,
+    frequency: ["月2-3回"],
     tags: [],
     img: "/og.png"
   },
@@ -54,6 +60,9 @@ const CIRCLES = [
     ageGroup: ["社会人"],
     monthlyFee: 1500,
     joinFee: 0,
+    trialAvailable: true,
+    immediateJoin: true,
+    frequency: ["週1回","不定期"],
     tags: ["体験可"],
     img: "/og.png"
   },
@@ -72,6 +81,9 @@ const CIRCLES = [
     ageGroup: ["社会人"],
     monthlyFee: 2500,
     joinFee: 0,
+    trialAvailable: false,
+    immediateJoin: false,
+    frequency: ["月1回"],
     tags: [],
     img: "/og.png"
   },
@@ -162,6 +174,21 @@ const FEATURED_EVENTS = EVENTS.slice(0, 2);
           ))}
         </div>
 
+        <!-- 追加：体験可・即参加可・活動頻度 -->
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <span class="block text-sm font-medium mb-1">特典</span>
+            <label class="block"><input type="checkbox" name="trial" value="yes" /> 体験可のみ</label>
+            <label class="block"><input type="checkbox" name="immediate" value="yes" /> 即参加可のみ</label>
+          </div>
+          <div>
+            <span class="block text-sm font-medium mb-1">活動頻度</span>
+            {["週1回","週2回","月1回","月2-3回","不定期"].map(f => (
+              <label class="block"><input type="checkbox" name="frequency" value={f} /> {f}</label>
+            ))}
+          </div>
+        </div>
+
         <!-- 費用帯 -->
         <div class="grid grid-cols-2 gap-2">
           <div>
@@ -220,10 +247,14 @@ const FEATURED_EVENTS = EVENTS.slice(0, 2);
           <article class="border rounded overflow-hidden">
             <img src={c.img} alt={c.name} class="w-full aspect-video object-cover" />
             <div class="p-3">
-              <div class="text-xs text-gray-500 mb-1">{c.category}・{c.areaPref}{c.areaCity ? ` ${c.areaCity}` : ""}</div>
+              <div class="text-xs text-gray-500 mb-1">
+                {c.category}・{c.areaPref}{c.areaCity ? ` ${c.areaCity}` : ""}
+              </div>
               <h3 class="font-semibold mb-1">{c.name}</h3>
               <div class="text-xs text-gray-600">
                 {c.level}／{c.memberCount}名／月会費{c.monthlyFee}円
+                {c.trialAvailable ? "／体験可" : ""}{c.immediateJoin ? "／即参加可" : ""}
+                {c.frequency?.length ? `／${c.frequency.join("・")}` : ""}
               </div>
             </div>
           </article>
@@ -289,7 +320,9 @@ const FEATURED_EVENTS = EVENTS.slice(0, 2);
           <div class="p-3">
             <div class="text-xs text-gray-500 mb-1">${c.category}・${c.areaPref}${c.areaCity ? " " + c.areaCity : ""}</div>
             <h3 class="font-semibold mb-1">${c.name}</h3>
-            <div class="text-xs text-gray-600">${c.level}／${c.memberCount}名／月会費${c.monthlyFee}円</div>
+            <div class="text-xs text-gray-600">
+              ${c.level}／${c.memberCount}名／月会費${c.monthlyFee}円${c.trialAvailable ? "／体験可" : ""}${c.immediateJoin ? "／即参加可" : ""}${(c.frequency||[]).length ? "／" + c.frequency.join("・") : ""}
+            </div>
           </div>
         </article>
       `).join("");
@@ -306,6 +339,9 @@ const FEATURED_EVENTS = EVENTS.slice(0, 2);
       const ages = getChecked("ageGroup"); if (ages.length) parts.push(`年齢: ${ages.join("、")}`);
       const wds = getChecked("weekday"); if (wds.length) parts.push(`曜日: ${wds.join("、")}`);
       const times = getChecked("time"); if (times.length) parts.push(`時間帯: ${times.join("、")}`);
+      const frqs = getChecked("frequency"); if (frqs.length) parts.push(`頻度: ${frqs.join("、")}`);
+      if (form.trial.checked) parts.push("体験可のみ");
+      if (form.immediate.checked) parts.push("即参加可のみ");
       const feeMin = num(form.feeMin.value); const feeMax = num(form.feeMax.value);
       if (feeMin != null || feeMax != null) parts.push(`月会費: ${feeMin ?? 0}〜${feeMax ?? "上限なし"}円`);
       const minMem = num(form.minMembers.value); const maxMem = num(form.maxMembers.value);
@@ -324,6 +360,9 @@ const FEATURED_EVENTS = EVENTS.slice(0, 2);
       const weekdays = getChecked("weekday");
       const times = getChecked("time");
       const ages = getChecked("ageGroup");
+      const frequencies = getChecked("frequency");
+      const needTrial = form.trial.checked;
+      const needImmediate = form.immediate.checked;
 
       const pref = form.pref.value;
       const city = (form.city.value || "").trim();
@@ -339,16 +378,25 @@ const FEATURED_EVENTS = EVENTS.slice(0, 2);
         if (pref && c.areaPref !== pref) return false;
         if (city && !includesFold(c.areaCity || "", city)) return false;
         if (station && !includesFold(c.station || "", station)) return false;
+
         if (categories.length && !categories.includes(c.category)) return false;
         if (genders.length && !genders.includes(c.gender)) return false;
         if (levels.length && !levels.includes(c.level)) return false;
         if (ages.length && !(c.ageGroup || []).some(a => ages.includes(a))) return false;
+
         if (weekdays.length && !(c.weekday || []).some(d => weekdays.includes(d))) return false;
         if (times.length && !(c.time || []).some(t => times.includes(t))) return false;
+
+        if (frequencies.length && !(c.frequency || []).some(f => frequencies.includes(f))) return false;
+        if (needTrial && !c.trialAvailable) return false;
+        if (needImmediate && !c.immediateJoin) return false;
+
         if (feeMin != null && !(c.monthlyFee >= feeMin)) return false;
         if (feeMax != null && !(c.monthlyFee <= feeMax)) return false;
+
         if (minMembers != null && !(c.memberCount >= minMembers)) return false;
         if (maxMembers != null && !(c.memberCount <= maxMembers)) return false;
+
         return true;
       });
 
