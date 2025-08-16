@@ -1,7 +1,21 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 ---
-<BaseLayout title="このサイトについて | MinnaCircle" lang="ja">
-  <h1 class="text-2xl font-bold mb-2">このサイトについて</h1>
-  <p>MinnaCircle は、趣味のサークルやコミュニティをつなぐためのサイトです。</p>
+
+<BaseLayout
+  title="MinnaCircleとは | MinnaCircle"
+  description="MinnaCircleについての紹介ページです。"
+  path="/about"
+  lang="ja"
+>
+  <section class="max-w-3xl mx-auto px-4 py-10">
+    <h1 class="text-2xl md:text-3xl font-bold mb-6">MinnaCircleとは？</h1>
+    <p class="mb-4">
+      MinnaCircleは、趣味やサークル活動を通じて人々が自然につながることを目的としたコミュニティサイトです。
+      多言語対応（日本語・英語）により、外国人ユーザーも安心して利用できます。
+    </p>
+    <p>
+      本サイトを通じて、仲間づくり・地域交流・ライフスタイル向上のきっかけを提供していきます。
+    </p>
+  </section>
 </BaseLayout>
