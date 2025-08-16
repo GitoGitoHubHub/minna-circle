@@ -8,39 +8,140 @@ import CircleCard from "../components/CircleCard.astro";
  *  - q: キーワード
  *  - type: "event" | "circle" | "all"
  *  - sort: "recent" | "popular" | "date" | "fee" | "name"
- *    * event向け: recent(新着), popular(人気), date(日時), fee(参加費)
- *    * circle向け: recent(新着), popular(人気=memberCount), name(名前)
+ *  - tags: カンマ区切り（例: "バスケ,初心者歓迎"）
+ *  - area: エリア文字列（例: "江東区"）
+ *  - minFee,maxFee: 数値（イベントのみ）
+ *  - dateFrom,dateTo: ISO日付 (YYYY-MM-DD)（イベントのみ）
  */
 const url = new URL(Astro.request.url);
 const q = url.searchParams.get("q") ?? "";
 const type = (url.searchParams.get("type") ?? "all").toLowerCase();
 const sort = (url.searchParams.get("sort") ?? "recent").toLowerCase();
+const tagsParam = url.searchParams.get("tags") ?? "";
+const tagList = tagsParam.split(",").map(t => t.trim()).filter(Boolean);
+const area = url.searchParams.get("area") ?? "";
+const minFee = Number(url.searchParams.get("minFee") ?? "") || 0;
+const maxFee = Number(url.searchParams.get("maxFee") ?? "") || Number.POSITIVE_INFINITY;
+const dateFrom = url.searchParams.get("dateFrom") ?? "";
+const dateTo = url.searchParams.get("dateTo") ?? "";
 
 /** ▼ ダミーデータ（本番では API/DB に置き換え） */
 const allEvents = [
-  { id:"ev-001", title:"朝活ランニング＠木場公園", description:"初心者歓迎。会話しながら軽く3km！", image:"/og.png", dateText:"2025-09-01 07:00", placeText:"木場公園集合", isFeatured:true,  createdAt:"2025-08-10T08:00:00+09:00", fee:0,   popularity:78 },
-  { id:"ev-002", title:"週末バスケ個人参加",       description:"経験不問。楽しく汗をかきましょう！", image:"/og.png", dateText:"2025-09-06 18:00", placeText:"江東区スポセン", isFeatured:false, createdAt:"2025-08-14T18:00:00+09:00", fee:800, popularity:120 },
-  { id:"ev-003", title:"英会話ゆるカフェ会",       description:"カジュアルに英会話。お子様連れOK。", image:"/og.png", dateText:"2025-09-07 10:00", placeText:"清澄白河",     isFeatured:false, createdAt:"2025-08-12T12:00:00+09:00", fee:500, popularity:64 }
+  {
+    id:"ev-001",
+    title:"朝活ランニング＠木場公園",
+    description:"初心者歓迎。会話しながら軽く3km！",
+    image:"/og.png",
+    dateText:"2025-09-01 07:00",
+    placeText:"木場公園集合",
+    areaText:"江東区",
+    isFeatured:true,
+    createdAt:"2025-08-10T08:00:00+09:00",
+    fee:0,
+    popularity:78,
+    tags:["ランニング","初心者歓迎","朝活"]
+  },
+  {
+    id:"ev-002",
+    title:"週末バスケ個人参加",
+    description:"経験不問。楽しく汗をかきましょう！",
+    image:"/og.png",
+    dateText:"2025-09-06 18:00",
+    placeText:"江東区スポセン",
+    areaText:"江東区",
+    isFeatured:false,
+    createdAt:"2025-08-14T18:00:00+09:00",
+    fee:800,
+    popularity:120,
+    tags:["バスケ","個サル","初心者歓迎"]
+  },
+  {
+    id:"ev-003",
+    title:"英会話ゆるカフェ会",
+    description:"カジュアルに英会話。お子様連れOK。",
+    image:"/og.png",
+    dateText:"2025-09-07 10:00",
+    placeText:"清澄白河",
+    areaText:"江東区",
+    isFeatured:false,
+    createdAt:"2025-08-12T12:00:00+09:00",
+    fee:500,
+    popularity:64,
+    tags:["英会話","カフェ","親子OK"]
+  }
 ];
 
 const allCircles = [
-  { id:"cl-001", name:"ミンナでバスケ",     intro:"初心者～経験者まで幅広く。試合より交流重視！", image:"/og.png", memberCount:42, areaText:"江東区・墨田区", isPickup:true,  createdAt:"2025-08-05T12:00:00+09:00", popularity:150 },
-  { id:"cl-002", name:"清澄コーヒー巡り部", intro:"週一でコーヒー店を探訪。豆知識交換しましょう。",   image:"/og.png", memberCount:18, areaText:"清澄白河・門前仲町", isPickup:false, createdAt:"2025-08-15T09:00:00+09:00", popularity:80  },
-  { id:"cl-003", name:"親子で外遊び",       intro:"小さなお子さん歓迎。水遊び・公園ピクニックなど。", image:"/og.png", memberCount:27, areaText:"東陽町・有明",     isPickup:false, createdAt:"2025-08-08T09:00:00+09:00", popularity:96  }
+  {
+    id:"cl-001",
+    name:"ミンナでバスケ",
+    intro:"初心者～経験者まで幅広く。試合より交流重視！",
+    image:"/og.png",
+    memberCount:42,
+    areaText:"江東区・墨田区",
+    isPickup:true,
+    createdAt:"2025-08-05T12:00:00+09:00",
+    popularity:150,
+    tags:["バスケ","交流","初心者歓迎"]
+  },
+  {
+    id:"cl-002",
+    name:"清澄コーヒー巡り部",
+    intro:"週一でコーヒー店を探訪。豆知識交換しましょう。",
+    image:"/og.png",
+    memberCount:18,
+    areaText:"清澄白河・門前仲町",
+    isPickup:false,
+    createdAt:"2025-08-15T09:00:00+09:00",
+    popularity:80,
+    tags:["カフェ","散策"]
+  },
+  {
+    id:"cl-003",
+    name:"親子で外遊び",
+    intro:"小さなお子さん歓迎。水遊び・公園ピクニックなど。",
+    image:"/og.png",
+    memberCount:27,
+    areaText:"東陽町・有明",
+    isPickup:false,
+    createdAt:"2025-08-08T09:00:00+09:00",
+    popularity:96,
+    tags:["親子OK","公園","アウトドア"]
+  }
 ];
 
-/** ▼ 検索フィルタ */
+/** ▼ ユーティリティ */
 const norm = (s: string) => (s ?? "").toLowerCase();
-const hitEvent = (ev) =>
-  !q || norm(ev.title).includes(norm(q)) || norm(ev.description).includes(norm(q)) || norm(ev.placeText).includes(norm(q));
-const hitCircle = (cl) =>
-  !q || norm(cl.name).includes(norm(q)) || norm(cl.intro).includes(norm(q)) || norm(cl.areaText).includes(norm(q));
+const includesAnyTag = (hay: string[] = [], needles: string[]) =>
+  needles.length === 0 || needles.every(tag => hay.map(norm).includes(norm(tag)));
+const parseDate = (s: string) => new Date(s.replace(" ", "T")).getTime(); // "YYYY-MM-DD hh:mm" も許容
+const inDateRange = (startStr: string, fromStr: string, toStr: string) => {
+  const t = parseDate(startStr);
+  const fromOk = !fromStr || t >= new Date(`${fromStr}T00:00:00+09:00`).getTime();
+  const toOk   = !toStr   || t <= new Date(`${toStr}T23:59:59+09:00`).getTime();
+  return fromOk && toOk;
+};
+
+/** ▼ 検索フィルタ */
+const hitEvent = (ev) => {
+  const kw = !q || norm(ev.title).includes(norm(q)) || norm(ev.description).includes(norm(q)) || norm(ev.placeText).includes(norm(q));
+  const areaOk = !area || norm(ev.areaText).includes(norm(area));
+  const tagOk = includesAnyTag(ev.tags, tagList);
+  const feeOk = ev.fee >= minFee && ev.fee <= maxFee;
+  const dateOk = inDateRange(ev.dateText, dateFrom, dateTo);
+  return kw && areaOk && tagOk && feeOk && dateOk;
+};
+
+const hitCircle = (cl) => {
+  const kw = !q || norm(cl.name).includes(norm(q)) || norm(cl.intro).includes(norm(q)) || norm(cl.areaText).includes(norm(q));
+  const areaOk = !area || norm(cl.areaText).includes(norm(area));
+  const tagOk = includesAnyTag(cl.tags, tagList);
+  return kw && areaOk && tagOk;
+};
 
 /** ▼ ソート関数 */
-const parseDate = (s: string) => new Date(s).getTime();
 const byDesc = (a, b) => (b - a);
 const byAsc  = (a, b) => (a - b);
-
 const sortEvents = (list) => {
   switch (sort) {
     case "popular": return [...list].sort((a,b) => byDesc(a.popularity, b.popularity));
@@ -50,7 +151,6 @@ const sortEvents = (list) => {
     default:        return [...list].sort((a,b) => byDesc(parseDate(a.createdAt), parseDate(b.createdAt)));
   }
 };
-
 const sortCircles = (list) => {
   switch (sort) {
     case "popular": return [...list].sort((a,b) => byDesc(a.memberCount, b.memberCount));
@@ -68,7 +168,7 @@ const circles = sortCircles(allCircles.filter(hitCircle));
 const showEvents = type === "event" || type === "all";
 const showCircles = type === "circle" || type === "all";
 
-/** ▼ ユーティリティ */
+/** ▼ クイックリンク生成 */
 const withQS = (patch: Record<string,string>) => {
   const u = new URL(url);
   Object.entries(patch).forEach(([k,v]) => {
@@ -83,39 +183,103 @@ const withQS = (patch: Record<string,string>) => {
   <!-- ヘッダー -->
   <section class="max-w-6xl mx-auto px-4 pt-8">
     <h1 class="text-2xl md:text-3xl font-extrabold">検索</h1>
-    <p class="text-gray-600 mt-1 text-sm md:text-base">キーワードと種別、並び替えを指定して検索できます。</p>
+    <p class="text-gray-600 mt-1 text-sm md:text-base">キーワード・種別に加え、タグ/エリア/費用帯/日時レンジで絞り込めます。</p>
 
     <!-- 検索フォーム（method=GET で /search に送信） -->
-    <form action="/search" method="get" class="mt-4 grid grid-cols-1 md:grid-cols-[1fr_180px_auto_auto] gap-2 items-center">
-      <label class="sr-only" for="q">キーワード</label>
-      <input
-        id="q"
-        name="q"
-        type="search"
-        placeholder="例）バスケ / 英会話 / 清澄白河"
-        value={q}
-        class="w-full rounded-xl border px-4 py-2"
-      />
+    <form action="/search" method="get" class="mt-4 grid grid-cols-1 gap-2">
+      <div class="grid grid-cols-1 md:grid-cols-[1fr_160px_160px_160px] gap-2">
+        <!-- キーワード -->
+        <input
+          id="q"
+          name="q"
+          type="search"
+          placeholder="例）バスケ / 英会話 / 清澄白河"
+          value={q}
+          class="w-full rounded-xl border px-4 py-2"
+          aria-label="キーワード"
+        />
+        <!-- 種別 -->
+        <select id="type" name="type" class="rounded-xl border px-3 py-2" aria-label="種別">
+          <option value="all" selected={type==="all"}>すべて</option>
+          <option value="event" selected={type==="event"}>イベント</option>
+          <option value="circle" selected={type==="circle"}>サークル</option>
+        </select>
+        <!-- 並び替え -->
+        <select id="sort" name="sort" class="rounded-xl border px-3 py-2" aria-label="並び替え">
+          <option value="recent"   selected={sort==="recent"}>新着</option>
+          <option value="popular"  selected={sort==="popular"}>人気</option>
+          <option value="date"     selected={sort==="date"}>（イベント）日時</option>
+          <option value="fee"      selected={sort==="fee"}>（イベント）参加費</option>
+          <option value="name"     selected={sort==="name"}>（サークル）名前</option>
+        </select>
+        <!-- エリア -->
+        <input
+          id="area"
+          name="area"
+          type="text"
+          placeholder="エリア（例：江東区）"
+          value={area}
+          class="rounded-xl border px-4 py-2"
+          aria-label="エリア"
+        />
+      </div>
 
-      <label class="sr-only" for="type">種別</label>
-      <select id="type" name="type" class="rounded-xl border px-3 py-2">
-        <option value="all" selected={type==="all"}>すべて</option>
-        <option value="event" selected={type==="event"}>イベント</option>
-        <option value="circle" selected={type==="circle"}>サークル</option>
-      </select>
+      <!-- タグ / 参加費 / 日時 -->
+      <div class="grid grid-cols-1 md:grid-cols-[1fr_120px_120px_150px_150px] gap-2">
+        <input
+          id="tags"
+          name="tags"
+          type="text"
+          placeholder="タグ（カンマ区切り）例：バスケ,初心者歓迎"
+          value={tagsParam}
+          class="rounded-xl border px-4 py-2"
+          aria-label="タグ"
+        />
+        <input
+          id="minFee"
+          name="minFee"
+          type="number"
+          min="0"
+          placeholder="最小費用"
+          value={Number.isFinite(minFee) && minFee > 0 ? String(minFee) : ""}
+          class="rounded-xl border px-4 py-2"
+          aria-label="最小費用"
+        />
+        <input
+          id="maxFee"
+          name="maxFee"
+          type="number"
+          min="0"
+          placeholder="最大費用"
+          value={Number.isFinite(maxFee) && maxFee !== Number.POSITIVE_INFINITY ? String(maxFee) : ""}
+          class="rounded-xl border px-4 py-2"
+          aria-label="最大費用"
+        />
+        <input
+          id="dateFrom"
+          name="dateFrom"
+          type="date"
+          value={dateFrom}
+          class="rounded-xl border px-4 py-2"
+          aria-label="開始日"
+        />
+        <input
+          id="dateTo"
+          name="dateTo"
+          type="date"
+          value={dateTo}
+          class="rounded-xl border px-4 py-2"
+          aria-label="終了日"
+        />
+      </div>
 
-      <label class="sr-only" for="sort">並び替え</label>
-      <select id="sort" name="sort" class="rounded-xl border px-3 py-2">
-        <option value="recent"   selected={sort==="recent"}>新着</option>
-        <option value="popular"  selected={sort==="popular"}>人気</option>
-        <option value="date"     selected={sort==="date"}>（イベント）日時</option>
-        <option value="fee"      selected={sort==="fee"}>（イベント）参加費</option>
-        <option value="name"     selected={sort==="name"}>（サークル）名前</option>
-      </select>
-
-      <button type="submit" class="rounded-xl bg-indigo-600 text-white px-5 py-2 shadow hover:bg-indigo-700 transition">
-        検索
-      </button>
+      <!-- アクション -->
+      <div class="flex flex-wrap gap-2">
+        <button type="submit" class="rounded-xl bg-indigo-600 text-white px-5 py-2 shadow hover:bg-indigo-700 transition">
+          検索
+        </button>
+        <a href="/search" class="text-sm text-indigo-600 hover:underline">条件クリア</a>
+      </div>
     </form>
 
     <!-- クイック並び替え（リンク） -->
@@ -130,9 +294,13 @@ const withQS = (patch: Record<string,string>) => {
 
     <!-- 現在の条件の表示 -->
     <p class="text-gray-600 mt-2 text-xs md:text-sm">
-      現在の条件: キーワード=<span class="font-semibold">{q || "（未指定）"}</span>
+      条件: キーワード=<span class="font-semibold">{q || "（未指定）"}</span>
       / 種別=<span class="font-semibold uppercase">{type}</span>
       / 並び替え=<span class="font-semibold">{sort}</span>
+      / エリア=<span class="font-semibold">{area || "（未指定）"}</span>
+      / タグ=<span class="font-semibold">{tagsParam || "（未指定）"}</span>
+      / 参加費=<span class="font-semibold">{(minFee||"0")}〜{Number.isFinite(maxFee)&&maxFee!==Number.POSITIVE_INFINITY?maxFee:"∞"}</span>
+      / 日時=<span class="font-semibold">{dateFrom||"—"}〜{dateTo||"—"}</span>
     </p>
   </section>
 
