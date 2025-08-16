@@ -14,22 +14,27 @@ const cover = circle.image || "/og.png";
 ---
 
 <a href={`/circles/${circle.id}`} class="block rounded-2xl border shadow hover:shadow-lg transition bg-white overflow-hidden">
-  <!-- 画像を小型サムネに固定（インラインstyle + !important で確実に適用） -->
-  <img
-    src={cover}
-    alt={circle.name}
-    loading="lazy"
-    decoding="async"
-    style="display:block;width:100% !important;height:96px !important;object-fit:cover !important;object-position:center;"
-  />
+  <div class="p-4">
+    <div class="flex items-start gap-4">
+      <!-- 小型サムネ（横並び左側） -->
+      <img
+        src={cover}
+        alt={circle.name}
+        loading="lazy"
+        decoding="async"
+        style="width:120px !important;height:80px !important;object-fit:cover !important;object-position:center;border-radius:10px;display:block;"
+      />
 
-  <div class="p-4 space-y-2">
-    <h3 class="text-lg font-bold line-clamp-2">{circle.name}</h3>
-    {circle.intro && <p class="text-sm text-gray-600 line-clamp-2">{circle.intro}</p>}
-    {typeof circle.memberCount === "number" && (
-      <p class="text-xs text-gray-500">メンバー数: {circle.memberCount}</p>
-    )}
-    {circle.areaText && <p class="text-xs text-gray-500">エリア: {circle.areaText}</p>}
-    {typeof circle.popularity === "number" && <p class="text-xs text-gray-500">人気度: {circle.popularity}</p>}
+      <!-- 右側テキスト -->
+      <div class="min-w-0 flex-1">
+        <h3 class="text-base md:text-lg font-bold leading-snug line-clamp-2">{circle.name}</h3>
+        {circle.intro && <p class="mt-1 text-sm text-gray-600 line-clamp-2">{circle.intro}</p>}
+        <div class="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-500">
+          {typeof circle.memberCount === "number" && <span>メンバー数: {circle.memberCount}</span>}
+          {circle.areaText && <span>エリア: {circle.areaText}</span>}
+          {typeof circle.popularity === "number" && <span>人気度: {circle.popularity}</span>}
+        </div>
+      </div>
+    </div>
   </div>
 </a>
