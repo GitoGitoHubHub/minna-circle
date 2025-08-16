@@ -1,31 +1,32 @@
 ---
-import CardBase from "./CardBase.astro";
+interface Props {
+  event: {
+    id: string;
+    title: string;
+    description: string;
+    image: string;
+    dateText: string;
+    placeText: string;
+    areaText: string;
+    fee: number;
+    popularity: number;
+  };
+}
 const { event } = Astro.props;
-/**
- * event オブジェクト想定例:
- * {
- *   id: "ev-001",
- *   title: "週末バスケ個人参加",
- *   description: "経験不問。楽しく汗をかきましょう！",
- *   image: "/og.png",
- *   dateText: "2025-09-06 18:00",
- *   placeText: "江東区スポセン",
- *   isFeatured: true
- * }
- */
 ---
 
-<CardBase
-  image={event.image}
-  title={event.title}
-  description={event.description}
-  tags={[event?.isFeatured ? "注目イベント" : "イベント"]}
-  meta={[
-    `📅 ${event?.dateText ?? ""}`,
-    `📍 ${event?.placeText ?? ""}`
-  ]}
-  actions={[
-    { href: `/events/${event?.id}`, label: "詳細を見る" },
-    { href: `/events/${event?.id}/join`, label: "参加する", primary: true }
-  ]}
-/>
+<a href={`/events/${event.id}`} class="block rounded-2xl border shadow hover:shadow-lg transition bg-white overflow-hidden">
+  <img
+    src={event.image}
+    alt={event.title}
+    class="w-full h-24 object-cover rounded-t-2xl"
+  />
+  <div class="p-4 space-y-2">
+    <h3 class="text-lg font-bold">{event.title}</h3>
+    <p class="text-sm text-gray-600 line-clamp-2">{event.description}</p>
+    <p class="text-xs text-gray-500">{event.dateText} @ {event.placeText}</p>
+    <p class="text-xs text-gray-500">エリア: {event.areaText}</p>
+    <p class="text-xs text-gray-500">参加費: {event.fee === 0 ? "無料" : `${event.fee}円`}</p>
+    <p class="text-xs text-gray-500">人気度: {event.popularity}</p>
+  </div>
+</a>
