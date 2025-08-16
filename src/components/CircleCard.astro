@@ -1,30 +1,29 @@
 ---
-import CardBase from "./CardBase.astro";
+interface Props {
+  circle: {
+    id: string;
+    name: string;
+    intro: string;
+    image: string;
+    memberCount: number;
+    areaText: string;
+    popularity: number;
+  };
+}
 const { circle } = Astro.props;
-/**
- * circle オブジェクト想定例:
- * {
- *   id: "cl-001",
- *   name: "ミンナでバスケ",
- *   intro: "初心者～経験者まで幅広く。試合より交流重視！",
- *   image: "/og.png",
- *   memberCount: 42,
- *   areaText: "江東区・墨田区",
- *   isPickup: true
- * }
- */
 ---
 
-<CardBase
-  image={circle?.image}
-  title={circle?.name}
-  description={circle?.intro}
-  tags={[circle?.isPickup ? "ピックアップ" : "サークル"]}
-  meta={[
-    `👥 メンバー ${circle?.memberCount ?? 0}`,
-    `📍 活動エリア: ${circle?.areaText ?? ""}`
-  ]}
-  actions={[
-    { href: `/circles/${circle?.id}`, label: "詳細を見る", primary: true }
-  ]}
-/>
+<a href={`/circles/${circle.id}`} class="block rounded-2xl border shadow hover:shadow-lg transition bg-white overflow-hidden">
+  <img
+    src={circle.image}
+    alt={circle.name}
+    class="w-full h-24 object-cover rounded-t-2xl"
+  />
+  <div class="p-4 space-y-2">
+    <h3 class="text-lg font-bold">{circle.name}</h3>
+    <p class="text-sm text-gray-600 line-clamp-2">{circle.intro}</p>
+    <p class="text-xs text-gray-500">メンバー数: {circle.memberCount}</p>
+    <p class="text-xs text-gray-500">エリア: {circle.areaText}</p>
+    <p class="text-xs text-gray-500">人気度: {circle.popularity}</p>
+  </div>
+</a>
