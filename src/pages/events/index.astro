@@ -1,0 +1,100 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import EventCard from "../../components/EventCard.astro";
+
+/** ダミーデータ（詳細ページと整合） */
+const allEvents = [
+  { id:"ev-001", title:"朝活ランニング＠木場公園", description:"初心者歓迎。会話しながら軽く3km！", image:"/og.png", dateText:"2025-09-01 07:00", placeText:"木場公園集合", areaText:"江東区", isFeatured:true,  createdAt:"2025-08-10T08:00:00+09:00", fee:0,   popularity:78, tags:["ランニング","初心者歓迎","朝活"] },
+  { id:"ev-002", title:"週末バスケ個人参加",       description:"経験不問。楽しく汗をかきましょう！", image:"/og.png", dateText:"2025-09-06 18:00", placeText:"江東区スポセン", areaText:"江東区", isFeatured:false, createdAt:"2025-08-14T18:00:00+09:00", fee:800, popularity:120, tags:["バスケ","個サル","初心者歓迎"] },
+  { id:"ev-003", title:"英会話ゆるカフェ会",       description:"カジュアルに英会話。お子様連れOK。", image:"/og.png", dateText:"2025-09-07 10:00", placeText:"清澄白河", areaText:"江東区", isFeatured:false, createdAt:"2025-08-12T12:00:00+09:00", fee:500, popularity:64,  tags:["英会話","カフェ","親子OK"] }
+];
+
+/** クエリ取得 */
+const url = new URL(Astro.request.url);
+const q = (url.searchParams.get("q") ?? "").toLowerCase();
+const area = (url.searchParams.get("area") ?? "").toLowerCase();
+const sort = (url.searchParams.get("sort") ?? "date").toLowerCase(); // date|recent|popular|fee
+
+/** ユーティリティ */
+const parseDate = (s: string) => new Date(s.replace(" ", "T")).getTime();
+const norm = (s: string) => (s ?? "").toLowerCase();
+
+/** フィルタ */
+const hit = (ev) =>
+  (!q || norm(ev.title).includes(q) || norm(ev.description).includes(q) || norm(ev.placeText).includes(q) || ev.tags?.some(t => norm(t).includes(q))) &&
+  (!area || norm(ev.areaText).includes(area));
+
+/** ソート */
+const byDesc = (a,b) => b-a, byAsc = (a,b) => a-b;
+const sortEvents = (list) => {
+  switch (sort) {
+    case "recent":  return [...list].sort((a,b)=>byDesc(parseDate(a.createdAt), parseDate(b.createdAt)));
+    case "popular": return [...list].sort((a,b)=>byDesc(a.popularity, b.popularity));
+    case "fee":     return [...list].sort((a,b)=>byAsc(a.fee, b.fee));
+    case "date":
+    default:        return [...list].sort((a,b)=>byAsc(parseDate(a.dateText), parseDate(b.dateText)));
+  }
+};
+
+const events = sortEvents(allEvents.filter(hit));
+
+/** クエリ生成 */
+const withQS = (patch: Record<string,string>) => {
+  const u = new URL(url);
+  Object.entries(patch).forEach(([k,v]) => {
+    if (!v) u.searchParams.delete(k); else u.searchParams.set(k,v);
+  });
+  return `${u.pathname}?${u.searchParams.toString()}`;
+};
+---
+
+<BaseLayout title="Events | MinnaCircle" lang="ja" meta_description="開催予定のイベント一覧（並び替え・簡易フィルタ対応）">
+  <section class="max-w-6xl mx-auto px-4 py-8 md:py-12">
+    <header class="mb-6">
+      <h1 class="text-2xl md:text-3xl font-extrabold">イベント一覧</h1>
+      <p class="text-gray-600 mt-1">開催予定のイベントを一覧で確認できます。</p>
+    </header>
+
+    <!-- フィルタ/ソート -->
+    <form action="/events" method="get" class="grid grid-cols-1 md:grid-cols-[1fr_160px_140px_auto] gap-2 items-center mb-4">
+      <input name="q" type="search" placeholder="キーワード（例：バスケ/英会話/木場）" value={q} class="rounded-xl border px-4 py-2" />
+      <input name="area" type="text" placeholder="エリア（例：江東区）" value={area} class="rounded-xl border px-4 py-2" />
+      <select name="sort" class="rounded-xl border px-3 py-2">
+        <option value="date"     selected={sort==="date"}>開催日が近い順</option>
+        <option value="recent"   selected={sort==="recent"}>新着順</option>
+        <option value="popular"  selected={sort==="popular"}>人気順</option>
+        <option value="fee"      selected={sort==="fee"}>参加費の安い順</option>
+      </select>
+      <div class="flex gap-2">
+        <button class="bg-indigo-600 text-white px-5 py-2 rounded-xl shadow hover:bg-indigo-700 transition">適用</button>
+        <a href="/events" class="px-4 py-2 rounded-xl border hover:bg-gray-50 transition">クリア</a>
+      </div>
+    </form>
+
+    <!-- クイック並び替え -->
+    <div class="flex flex-wrap gap-2 text-xs md:text-sm mb-4">
+      <a class="px-3 py-1 rounded-full border hover:bg-gray-50" href={withQS({ sort:"date" })}>開催日が近い順</a>
+      <a class="px-3 py-1 rounded-full border hover:bg-gray-50" href={withQS({ sort:"recent" })}>新着順</a>
+      <a class="px-3 py-1 rounded-full border hover:bg-gray-50" href={withQS({ sort:"popular" })}>人気順</a>
+      <a class="px-3 py-1 rounded-full border hover:bg-gray-50" href={withQS({ sort:"fee" })}>参加費の安い順</a>
+    </div>
+
+    <!-- 件数 -->
+    <p class="text-sm text-gray-500 mb-3">該当件数: {events.length}</p>
+
+    <!-- 一覧 -->
+    {events.length > 0 ? (
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        {events.map(ev => (<EventCard event={ev} />))}
+      </div>
+    ) : (
+      <div class="rounded-2xl border p-6 text-center text-gray-600">該当するイベントが見つかりませんでした。</div>
+    )}
+
+    <!-- 導線 -->
+    <div class="mt-8 flex flex-wrap gap-3">
+      <a href="/search?type=event" class="px-5 py-2 rounded-xl border hover:bg-gray-50 transition">詳細検索へ</a>
+      <a href="/" class="text-indigo-700 underline px-3 py-2">トップへ戻る</a>
+    </div>
+  </section>
+</BaseLayout>
