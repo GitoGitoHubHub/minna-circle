@@ -12,23 +12,18 @@ const { event } = Astro.props as {
     popularity?: number;
   };
 };
+const cover = event.image || "/og.png";
 ---
 
 <a href={`/events/${event.id}`} class="block rounded-2xl border shadow hover:shadow-lg transition bg-white overflow-hidden">
-  <!-- 固定高さサムネイル（インラインstyleで確実に固定） -->
-  <div class="relative w-full overflow-hidden" style="height:96px">
-    <img
-      src={event.image || "/og.png"}
-      alt={event.title}
-      class="absolute inset-0 w-full h-full object-cover"
-      loading="lazy"
-      decoding="async"
-    />
-  </div>
-
+  <!-- 背景画像サムネ（img不使用 → グローバルCSSの影響を回避） -->
+  <div
+    class="w-full h-24 bg-cover bg-center"
+    style={`background-image:url('${cover}');`}
+  />
   <div class="p-4 space-y-2">
-    <h3 class="text-lg font-bold">{event.title}</h3>
-    {event.description && <p class="text-sm text-gray-600">{event.description}</p>}
+    <h3 class="text-lg font-bold line-clamp-2">{event.title}</h3>
+    {event.description && <p class="text-sm text-gray-600 line-clamp-2">{event.description}</p>}
     {(event.dateText || event.placeText) && (
       <p class="text-xs text-gray-500">
         {event.dateText || ""}{event.placeText ? ` @ ${event.placeText}` : ""}
