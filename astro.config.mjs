@@ -1,9 +1,9 @@
 import { defineConfig } from 'astro/config';
 
-// ★ 本番ドメインに置き換えてください（例）
-const SITE = process.env.SITE || 'https://minnacircle.example.com';
+// SITE は Vercel 環境変数から。ローカルでも .env で補えます。
+const SITE = process.env.SITE || 'https://minnacircle.vercel.app';
 
 export default defineConfig({
-  site: SITE,
-  // 必要なら他の統合や設定をここに
+  site: SITE,          // ★ これで Astro は静的出力に必要な完全URLを把握
+  output: 'static',    // 明示しておくと安全
 });
