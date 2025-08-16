@@ -16,27 +16,28 @@ const cover = event.image || "/og.png";
 ---
 
 <a href={`/events/${event.id}`} class="block rounded-2xl border shadow hover:shadow-lg transition bg-white overflow-hidden">
-  <!-- 画像を小型サムネに固定（インラインstyle + !important で確実に適用） -->
-  <img
-    src={cover}
-    alt={event.title}
-    loading="lazy"
-    decoding="async"
-    style="display:block;width:100% !important;height:96px !important;object-fit:cover !important;object-position:center;"
-  />
+  <div class="p-4">
+    <div class="flex items-start gap-4">
+      <!-- 小型サムネ（横並び左側） -->
+      <img
+        src={cover}
+        alt={event.title}
+        loading="lazy"
+        decoding="async"
+        style="width:120px !important;height:80px !important;object-fit:cover !important;object-position:center;border-radius:10px;display:block;"
+      />
 
-  <div class="p-4 space-y-2">
-    <h3 class="text-lg font-bold line-clamp-2">{event.title}</h3>
-    {event.description && <p class="text-sm text-gray-600 line-clamp-2">{event.description}</p>}
-    {(event.dateText || event.placeText) && (
-      <p class="text-xs text-gray-500">
-        {event.dateText || ""}{event.placeText ? ` @ ${event.placeText}` : ""}
-      </p>
-    )}
-    {event.areaText && <p class="text-xs text-gray-500">エリア: {event.areaText}</p>}
-    {typeof event.fee === "number" && (
-      <p class="text-xs text-gray-500">参加費: {event.fee === 0 ? "無料" : `¥${event.fee.toLocaleString?.() || event.fee}`}</p>
-    )}
-    {typeof event.popularity === "number" && <p class="text-xs text-gray-500">人気度: {event.popularity}</p>}
+      <!-- 右側テキスト -->
+      <div class="min-w-0 flex-1">
+        <h3 class="text-base md:text-lg font-bold leading-snug line-clamp-2">{event.title}</h3>
+        {event.description && <p class="mt-1 text-sm text-gray-600 line-clamp-2">{event.description}</p>}
+        <div class="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-500">
+          {(event.dateText || event.placeText) && <span>{event.dateText || ""}{event.placeText ? ` @ ${event.placeText}` : ""}</span>}
+          {event.areaText && <span>エリア: {event.areaText}</span>}
+          {typeof event.fee === "number" && <span>参加費: {event.fee === 0 ? "無料" : `¥${event.fee.toLocaleString?.() || event.fee}`}</span>}
+          {typeof event.popularity === "number" && <span>人気度: {event.popularity}</span>}
+        </div>
+      </div>
+    </div>
   </div>
 </a>
