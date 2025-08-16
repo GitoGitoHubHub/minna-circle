@@ -1,16 +1,14 @@
 ---
 /**
  * BaseLayout
- * - 既存の canonical / meta / OG 設定を維持
- * - Organization の JSON-LD を恒常出力（SEO強化）
+ * - canonical / meta / OG 既存維持
+ * - Organization の JSON-LD を恒常出力（sameAs/絶対ロゴ対応）
  *
  * Props:
  *  - title?: string
  *  - description?: string
  *  - lang?: string ("ja" | "en" など) デフォルト: "ja"
  *  - image?: string  og:image 絶対URL推奨（未指定時は /og.png を使用）
- *
- * 注意: このレイアウトを使用する全ページに Organization スキーマが出力されます。
  */
 import JsonLd from "../components/JsonLd.astro";
 import { buildOrganization } from "../lib/schema";
@@ -22,22 +20,25 @@ const {
   image,
 } = Astro.props;
 
-// サイトのオリジン（astro.configでsite設定がある場合は Astro.site が入る）
+// サイトのオリジン（astro.configのsiteがあれば優先）
 const origin = (Astro.site ? String(Astro.site) : Astro.url.origin) ?? "";
-const url = new URL(Astro.url.pathname + Astro.url.search, origin).toString();
+const url = new URL(Astro.url.pathname + Astro.url.search, origin || undefined).toString();
 
-// og:image は props.image 優先、なければ /og.png を既定
+// og:image は props.image 優先、なければ /og.png
 const ogImage = image ?? (origin ? `${origin}/og.png` : "/og.png");
 
-// Organization スキーマ（必要に応じて sameAs を追加）
+// Organization スキーマ（sameAs/ロゴは絶対URLに）
 const orgSchema = buildOrganization({
   name: "MinnaCircle",
   url: origin || url,
   logo: origin ? `${origin}/og.png` : undefined,
   sameAs: [
-    // "https://x.com/your_account",
-    // "https://www.instagram.com/your_account"
-  ],
+    // ★ あるものだけ残してください
+    "https://x.com/your_account",
+    "https://www.instagram.com/your_account",
+    // "https://www.facebook.com/your_account",
+    // "https://www.youtube.com/@your_account",
+  ].filter(Boolean),
 });
 ---
 
@@ -52,7 +53,7 @@ const orgSchema = buildOrganization({
     <!-- Canonical -->
     <link rel="canonical" href={url} />
 
-    <!-- Favicon / App Icons（既存の設置を想定） -->
+    <!-- Favicon / App Icons -->
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
@@ -78,3 +79,4 @@ const orgSchema = buildOrganization({
     <slot />
   </body>
 </html>
+
