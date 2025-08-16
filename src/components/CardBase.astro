@@ -1,0 +1,42 @@
+---
+const {
+  image,
+  title,
+  description,
+  tags = [],
+  meta = [], // 例: ["📅 2025-09-01 19:00", "📍 江東区スポセン"]
+  actions = [] // 例: [{ href: "/events/1", label: "詳細を見る" }, { href: "/events/1/join", label: "参加する", primary: true }]
+} = Astro.props;
+---
+
+<article class="bg-white rounded-2xl shadow-md hover:shadow-xl transition p-4 flex flex-col">
+  <div class="relative">
+    <img src={image} alt={title} class="rounded-xl object-cover h-40 w-full" loading="lazy" />
+    <div class="absolute top-2 right-2 flex gap-2 flex-wrap justify-end">
+      {tags.map(tag => (
+        <span class="bg-indigo-600 text-white text-xs px-2 py-1 rounded-full shadow">{tag}</span>
+      ))}
+    </div>
+  </div>
+
+  <h3 class="mt-4 text-lg font-bold line-clamp-1">{title}</h3>
+  <p class="text-gray-600 text-sm line-clamp-2">{description}</p>
+
+  <div class="mt-3 text-xs text-gray-500 space-y-1">
+    {meta.map((m) => (<p>{m}</p>))}
+  </div>
+
+  <div class="mt-auto pt-4 flex gap-3 justify-between items-center">
+    {actions.map((a) => (
+      <a
+        href={a.href}
+        class={a.primary
+          ? "text-sm font-semibold bg-indigo-600 text-white px-3 py-1 rounded-lg shadow hover:bg-indigo-700 transition"
+          : "text-sm font-semibold text-indigo-600 hover:underline"
+        }
+      >
+        {a.label}
+      </a>
+    ))}
+  </div>
+</article>
