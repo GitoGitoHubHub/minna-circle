@@ -174,7 +174,7 @@ const FEATURED_EVENTS = EVENTS.slice(0, 2);
           ))}
         </div>
 
-        <!-- 追加：体験可・即参加可・活動頻度 -->
+        <!-- 体験可・即参加可・活動頻度 -->
         <div class="grid grid-cols-2 gap-2">
           <div>
             <span class="block text-sm font-medium mb-1">特典</span>
@@ -230,6 +230,7 @@ const FEATURED_EVENTS = EVENTS.slice(0, 2);
         </div>
 
         <button type="submit" class="w-full bg-yellow-500 text-white py-2 rounded hover:bg-yellow-600">検索</button>
+        <button type="button" id="resetBtn" class="w-full mt-2 border py-2 rounded hover:bg-gray-50">リセット</button>
       </form>
     </aside>
 
@@ -237,7 +238,16 @@ const FEATURED_EVENTS = EVENTS.slice(0, 2);
     <div class="md:col-span-8 lg:col-span-9">
       <div class="flex items-center justify-between mb-4">
         <h2 class="font-semibold">検索結果</h2>
-        <div class="text-sm text-gray-500"><span id="resultCount">{CIRCLES.length}</span> 件</div>
+        <div class="flex items-center gap-3">
+          <div class="text-sm text-gray-500"><span id="resultCount">{CIRCLES.length}</span> 件</div>
+          <select id="sortSelect" class="border rounded px-2 py-1 text-sm">
+            <option value="default">並び替え</option>
+            <option value="feeAsc">月会費(安い順)</option>
+            <option value="feeDesc">月会費(高い順)</option>
+            <option value="membersDesc">人数(多い順)</option>
+            <option value="nameAsc">名前A→Z</option>
+          </select>
+        </div>
       </div>
 
       <div id="activeChips" class="flex flex-wrap gap-2 mb-3 text-sm"></div>
@@ -302,8 +312,11 @@ const FEATURED_EVENTS = EVENTS.slice(0, 2);
     const count = document.getElementById("resultCount");
     const form = document.getElementById("searchForm");
     const chips = document.getElementById("activeChips");
+    const sortSel = document.getElementById("sortSelect");
+    const resetBtn = document.getElementById("resetBtn");
 
     const DATA = CIRCLES;
+    let lastResults = DATA;
 
     function getChecked(name) {
       return [...form.querySelectorAll(`input[name="${name}"]:checked`)].map(i => i.value);
@@ -312,9 +325,23 @@ const FEATURED_EVENTS = EVENTS.slice(0, 2);
     function includesFold(hay = "", needle = "") {
       return hay.toLowerCase().includes(needle.toLowerCase());
     }
+
+    function getSorted(list) {
+      const v = sortSel?.value || "default";
+      const arr = [...list];
+      switch (v) {
+        case "feeAsc":       return arr.sort((a,b) => (a.monthlyFee ?? 0) - (b.monthlyFee ?? 0));
+        case "feeDesc":      return arr.sort((a,b) => (b.monthlyFee ?? 0) - (a.monthlyFee ?? 0));
+        case "membersDesc":  return arr.sort((a,b) => (b.memberCount ?? 0) - (a.memberCount ?? 0));
+        case "nameAsc":      return arr.sort((a,b) => String(a.name).localeCompare(String(b.name), "ja"));
+        default:             return list;
+      }
+    }
+
     function render(list) {
-      count.textContent = list.length;
-      grid.innerHTML = list.map(c => `
+      const view = getSorted(list);
+      count.textContent = view.length;
+      grid.innerHTML = view.map(c => `
         <article class="border rounded overflow-hidden">
           <img src="${c.img}" alt="${c.name}" class="w-full aspect-video object-cover" />
           <div class="p-3">
@@ -400,10 +427,19 @@ const FEATURED_EVENTS = EVENTS.slice(0, 2);
         return true;
       });
 
+      lastResults = hit;
       render(hit);
+    });
+
+    sortSel?.addEventListener("change", () => render(lastResults));
+    resetBtn?.addEventListener("click", () => {
+      form.reset();
+      lastResults = DATA;
+      render(DATA);
     });
 
     // 初期描画
     render(DATA);
   </script>
 </BaseLayout>
+
