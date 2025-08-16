@@ -1,464 +1,104 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
+import EventCard from "../components/EventCard.astro";
+import CircleCard from "../components/CircleCard.astro";
 
-/** v1 ダミーデータ（将来はAPI/DBに置き換え） */
-const CIRCLES = [
+/** ▼ ダミーデータ（本番ではAPI/サーバデータに差し替え） */
+const featuredEvents = [
   {
-    id: "c1",
-    name: "DEARS",
-    category: "バスケットボール",
-    areaPref: "東京都",
-    areaCity: "渋谷区",
-    station: "渋谷",
-    level: "初心者歓迎",
+    id: "ev-001",
+    title: "朝活ランニング＠木場公園",
+    description: "初心者歓迎。会話しながら軽く3km！",
+    image: "/og.png",
+    dateText: "2025-09-01 07:00",
+    placeText: "木場公園集合",
+    isFeatured: true
+  },
+  {
+    id: "ev-002",
+    title: "週末バスケ個人参加",
+    description: "経験不問。楽しく汗をかきましょう！",
+    image: "/og.png",
+    dateText: "2025-09-06 18:00",
+    placeText: "江東区スポセン",
+    isFeatured: false
+  },
+  {
+    id: "ev-003",
+    title: "英会話ゆるカフェ会",
+    description: "カジュアルに英会話。お子様連れOK。",
+    image: "/og.png",
+    dateText: "2025-09-07 10:00",
+    placeText: "清澄白河",
+    isFeatured: false
+  }
+];
+
+const featuredCircles = [
+  {
+    id: "cl-001",
+    name: "ミンナでバスケ",
+    intro: "初心者～経験者まで幅広く。試合より交流重視！",
+    image: "/og.png",
+    memberCount: 42,
+    areaText: "江東区・墨田区",
+    isPickup: true
+  },
+  {
+    id: "cl-002",
+    name: "清澄コーヒー巡り部",
+    intro: "週一でコーヒー店を探訪。豆知識交換しましょう。",
+    image: "/og.png",
     memberCount: 18,
-    gender: "mixed",
-    weekday: ["土曜"],
-    time: ["9-12"],
-    ageGroup: ["小学生"],
-    monthlyFee: 2000,
-    joinFee: 0,
-    trialAvailable: true,
-    immediateJoin: false,
-    frequency: ["週1回"],
-    tags: ["体験可"],
-    img: "/og.png"
+    areaText: "清澄白河・門前仲町",
+    isPickup: false
   },
   {
-    id: "c2",
-    name: "NAKAGAWA FC",
-    category: "サッカー",
-    areaPref: "神奈川県",
-    areaCity: "中原区",
-    station: "武蔵小杉",
-    level: "経験者中心",
-    memberCount: 26,
-    gender: "mixed",
-    weekday: ["日曜"],
-    time: ["13-15"],
-    ageGroup: ["中学生"],
-    monthlyFee: 3000,
-    joinFee: 1000,
-    trialAvailable: false,
-    immediateJoin: true,
-    frequency: ["月2-3回"],
-    tags: [],
-    img: "/og.png"
-  },
-  {
-    id: "c3",
-    name: "藤井クラブ",
-    category: "卓球",
-    areaPref: "埼玉県",
-    areaCity: "さいたま市",
-    station: "大宮",
-    level: "誰でもOK",
-    memberCount: 14,
-    gender: "mixed",
-    weekday: ["平日"],
-    time: ["19-21"],
-    ageGroup: ["社会人"],
-    monthlyFee: 1500,
-    joinFee: 0,
-    trialAvailable: true,
-    immediateJoin: true,
-    frequency: ["週1回","不定期"],
-    tags: ["体験可"],
-    img: "/og.png"
-  },
-  {
-    id: "c4",
-    name: "川崎STC",
-    category: "テニス",
-    areaPref: "神奈川県",
-    areaCity: "川崎市",
-    station: "溝の口",
-    level: "初級",
-    memberCount: 20,
-    gender: "mixed",
-    weekday: ["土曜","日曜"],
-    time: ["15-18"],
-    ageGroup: ["社会人"],
-    monthlyFee: 2500,
-    joinFee: 0,
-    trialAvailable: false,
-    immediateJoin: false,
-    frequency: ["月1回"],
-    tags: [],
-    img: "/og.png"
-  },
+    id: "cl-003",
+    name: "親子で外遊び",
+    intro: "小さなお子さん歓迎。水遊び・公園ピクニックなど。",
+    image: "/og.png",
+    memberCount: 27,
+    areaText: "東陽町・有明",
+    isPickup: false
+  }
 ];
-
-const EVENTS = [
-  { id: "e1", title: "MinnaCircle Meetup #1", date: "2025-09-20", area: "東京都", category: "交流", img: "/og.png", url: "/events/meetup-1" },
-  { id: "e2", title: "はじめてのダンス体験会", date: "2025-10-05", area: "神奈川県", category: "ダンス", img: "/og.png", url: "#" },
-];
-
-const RECOMMENDED_CIRCLES = CIRCLES.slice(0, 3);
-const FEATURED_EVENTS = EVENTS.slice(0, 2);
 ---
 
-<BaseLayout
-  title="仲間をつくろう | MinnaCircle"
-  description="趣味・サークルを見つけて参加しよう。詳細な条件でマッチングできます。"
-  path="/"
-  lang="ja"
->
-  <!-- Hero -->
-  <section class="max-w-5xl mx-auto px-4 py-10 text-center">
-    <h1 class="text-3xl md:text-4xl font-bold mb-3">仲間をつくろう</h1>
-    <p class="text-gray-600">サークルの検索と募集一覧から、あなたに合う活動を見つけよう。</p>
-  </section>
-
-  <!-- 検索＆結果レイアウト -->
-  <section class="max-w-6xl mx-auto px-4 pb-16 grid grid-cols-1 md:grid-cols-12 gap-8">
-    <!-- 絞り込み（左） -->
-    <aside class="md:col-span-4 lg:col-span-3 border rounded p-4" id="filters">
-      <form id="searchForm" class="space-y-5">
-        <!-- キーワード -->
-        <div>
-          <label class="block text-sm font-medium mb-1">キーワード</label>
-          <input type="search" name="q" placeholder="例）サッカー、渋谷、初心者" class="w-full border rounded px-3 py-2" />
-        </div>
-
-        <!-- 活動ジャンル -->
-        <div>
-          <span class="block text-sm font-medium mb-1">活動ジャンル</span>
-          <div class="space-y-2 max-h-40 overflow-auto border rounded p-2">
-            {["サッカー","バスケットボール","テニス","卓球","ランニング","ダンス","バドミントン"].map(c => (
-              <label class="flex items-center gap-2"><input type="checkbox" name="category" value={c} /> {c}</label>
-            ))}
-          </div>
-        </div>
-
-        <!-- エリア -->
-        <div class="grid grid-cols-2 gap-2">
-          <div>
-            <span class="block text-sm font-medium mb-1">都道府県</span>
-            <select name="pref" class="w-full border rounded px-3 py-2">
-              <option value="">指定なし</option>
-              {["東京都","神奈川県","埼玉県","千葉県"].map(a => <option value={a}>{a}</option>)}
-            </select>
-          </div>
-          <div>
-            <span class="block text-sm font-medium mb-1">市区町村</span>
-            <input type="text" name="city" placeholder="例）渋谷区" class="w-full border rounded px-3 py-2" />
-          </div>
-          <div class="col-span-2">
-            <span class="block text-sm font-medium mb-1">最寄り駅（任意）</span>
-            <input type="text" name="station" placeholder="例）渋谷・大宮 など" class="w-full border rounded px-3 py-2" />
-          </div>
-        </div>
-
-        <!-- メンバー構成 / レベル -->
-        <div class="grid grid-cols-2 gap-2">
-          <div>
-            <span class="block text-sm font-medium mb-1">メンバー構成</span>
-            <label class="block"><input type="checkbox" name="gender" value="mixed" /> 男女混合</label>
-            <label class="block"><input type="checkbox" name="gender" value="men" /> 男性のみ</label>
-            <label class="block"><input type="checkbox" name="gender" value="women" /> 女性のみ</label>
-          </div>
-          <div>
-            <span class="block text-sm font-medium mb-1">レベル</span>
-            {["誰でもOK","初心者歓迎","初級","経験者中心"].map(l => (
-              <label class="block"><input type="checkbox" name="level" value={l} /> {l}</label>
-            ))}
-          </div>
-        </div>
-
-        <!-- 年齢層 -->
-        <div>
-          <span class="block text-sm font-medium mb-1">対象年齢</span>
-          {["小学生","中学生","高校生","大学生","社会人"].map(a => (
-            <label class="block"><input type="checkbox" name="ageGroup" value={a} /> {a}</label>
-          ))}
-        </div>
-
-        <!-- 体験可・即参加可・活動頻度 -->
-        <div class="grid grid-cols-2 gap-2">
-          <div>
-            <span class="block text-sm font-medium mb-1">特典</span>
-            <label class="block"><input type="checkbox" name="trial" value="yes" /> 体験可のみ</label>
-            <label class="block"><input type="checkbox" name="immediate" value="yes" /> 即参加可のみ</label>
-          </div>
-          <div>
-            <span class="block text-sm font-medium mb-1">活動頻度</span>
-            {["週1回","週2回","月1回","月2-3回","不定期"].map(f => (
-              <label class="block"><input type="checkbox" name="frequency" value={f} /> {f}</label>
-            ))}
-          </div>
-        </div>
-
-        <!-- 費用帯 -->
-        <div class="grid grid-cols-2 gap-2">
-          <div>
-            <span class="block text-sm font-medium mb-1">月会費（円）Min</span>
-            <input type="number" min="0" step="500" name="feeMin" placeholder="0" class="w-full border rounded px-3 py-2" />
-          </div>
-          <div>
-            <span class="block text-sm font-medium mb-1">月会費（円）Max</span>
-            <input type="number" min="0" step="500" name="feeMax" placeholder="3000" class="w-full border rounded px-3 py-2" />
-          </div>
-        </div>
-
-        <!-- 活動曜日・時間帯 -->
-        <div class="grid grid-cols-2 gap-2">
-          <div>
-            <span class="block text-sm font-medium mb-1">活動曜日</span>
-            {["平日","土曜","日曜"].map(d => (
-              <label class="block"><input type="checkbox" name="weekday" value={d} /> {d}</label>
-            ))}
-          </div>
-          <div>
-            <span class="block text-sm font-medium mb-1">時間帯</span>
-            {["9-12","13-15","15-18","19-21"].map(t => (
-              <label class="block"><input type="checkbox" name="time" value={t} /> {t}</label>
-            ))}
-          </div>
-        </div>
-
-        <!-- 人数（任意） -->
-        <div class="grid grid-cols-2 gap-2">
-          <div>
-            <span class="block text-sm font-medium mb-1">最小人数</span>
-            <input type="number" min="0" step="1" name="minMembers" placeholder="0" class="w-full border rounded px-3 py-2" />
-          </div>
-          <div>
-            <span class="block text-sm font-medium mb-1">最大人数</span>
-            <input type="number" min="0" step="1" name="maxMembers" placeholder="999" class="w-full border rounded px-3 py-2" />
-          </div>
-        </div>
-
-        <button type="submit" class="w-full bg-yellow-500 text-white py-2 rounded hover:bg-yellow-600">検索</button>
-        <button type="button" id="resetBtn" class="w-full mt-2 border py-2 rounded hover:bg-gray-50">リセット</button>
-      </form>
-    </aside>
-
-    <!-- 結果（右） -->
-    <div class="md:col-span-8 lg:col-span-9">
-      <div class="flex items-center justify-between mb-4">
-        <h2 class="font-semibold">検索結果</h2>
-        <div class="flex items-center gap-3">
-          <div class="text-sm text-gray-500"><span id="resultCount">{CIRCLES.length}</span> 件</div>
-          <select id="sortSelect" class="border rounded px-2 py-1 text-sm">
-            <option value="default">並び替え</option>
-            <option value="feeAsc">月会費(安い順)</option>
-            <option value="feeDesc">月会費(高い順)</option>
-            <option value="membersDesc">人数(多い順)</option>
-            <option value="nameAsc">名前A→Z</option>
-          </select>
-        </div>
+<BaseLayout title="MinnaCircle | みんなのためのサークル募集・検索" lang="ja">
+  <!-- Hero（既存のHeroをお使いの場合は必要に応じて編集OK） -->
+  <section class="max-w-6xl mx-auto px-4 py-8 md:py-12">
+    <div class="bg-indigo-50 rounded-2xl p-6 md:p-10">
+      <h1 class="text-2xl md:text-4xl font-extrabold mb-3">趣味でつながる、みんなのサークル</h1>
+      <p class="text-gray-700 md:text-lg">
+        近くのサークルやイベントを検索して、気軽に参加しよう。
+      </p>
+      <div class="mt-6 flex gap-3">
+        <a href="/search" class="bg-indigo-600 text-white px-5 py-2 rounded-xl shadow hover:bg-indigo-700 transition text-sm md:text-base">サークルを探す</a>
+        <a href="/vendor/new" class="text-indigo-700 font-semibold hover:underline text-sm md:text-base">サークルを作成</a>
       </div>
-
-      <div id="activeChips" class="flex flex-wrap gap-2 mb-3 text-sm"></div>
-
-      <div id="resultGrid" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {CIRCLES.map(c => (
-          <article class="border rounded overflow-hidden">
-            <img src={c.img} alt={c.name} class="w-full aspect-video object-cover" />
-            <div class="p-3">
-              <div class="text-xs text-gray-500 mb-1">
-                {c.category}・{c.areaPref}{c.areaCity ? ` ${c.areaCity}` : ""}
-              </div>
-              <h3 class="font-semibold mb-1">{c.name}</h3>
-              <div class="text-xs text-gray-600">
-                {c.level}／{c.memberCount}名／月会費{c.monthlyFee}円
-                {c.trialAvailable ? "／体験可" : ""}{c.immediateJoin ? "／即参加可" : ""}
-                {c.frequency?.length ? `／${c.frequency.join("・")}` : ""}
-              </div>
-            </div>
-          </article>
-        ))}
-      </div>
-    </div>
-  </section>
-
-  <!-- おすすめサークル -->
-  <section class="max-w-6xl mx-auto px-4 pb-16">
-    <h2 class="text-xl md:text-2xl font-bold mb-4">おすすめサークル</h2>
-    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {RECOMMENDED_CIRCLES.map(c => (
-        <article class="border rounded overflow-hidden">
-          <img src={c.img} alt={c.name} class="w-full aspect-video object-cover" />
-          <div class="p-3">
-            <div class="text-xs text-gray-500 mb-1">{c.category}・{c.areaPref}</div>
-            <h3 class="font-semibold">{c.name}</h3>
-          </div>
-        </article>
-      ))}
     </div>
   </section>
 
   <!-- 注目イベント -->
-  <section class="max-w-6xl mx-auto px-4 pb-20">
-    <h2 class="text-xl md:text-2xl font-bold mb-4">注目イベント</h2>
-    <div class="grid gap-4 sm:grid-cols-2 lg:col-span-3 md:grid-cols-2">
-      {FEATURED_EVENTS.map(e => (
-        <a href={e.url} class="border rounded overflow-hidden block">
-          <img src={e.img} alt={e.title} class="w-full aspect-video object-cover" />
-          <div class="p-3">
-            <div class="text-xs text-gray-500 mb-1">{e.category}・{e.area}</div>
-            <h3 class="font-semibold">{e.title}</h3>
-            <div class="text-xs text-gray-600">{e.date}</div>
-          </div>
-        </a>
-      ))}
+  <section class="max-w-6xl mx-auto px-4 py-6">
+    <div class="flex items-baseline justify-between mb-4">
+      <h2 class="text-xl md:text-2xl font-bold">注目イベント</h2>
+      <a href="/events" class="text-indigo-600 text-sm hover:underline">すべて見る</a>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      {featuredEvents.map(ev => (<EventCard event={ev} />))}
     </div>
   </section>
 
-  <!-- クライアント側フィルタ（define:vars で CIRCLES を受け渡し） -->
-  <script define:vars={{ CIRCLES }}>
-    const grid = document.getElementById("resultGrid");
-    const count = document.getElementById("resultCount");
-    const form = document.getElementById("searchForm");
-    const chips = document.getElementById("activeChips");
-    const sortSel = document.getElementById("sortSelect");
-    const resetBtn = document.getElementById("resetBtn");
-
-    const DATA = CIRCLES;
-    let lastResults = DATA;
-
-    function getChecked(name) {
-      return [...form.querySelectorAll(`input[name="${name}"]:checked`)].map(i => i.value);
-    }
-    function num(v) { const n = Number(v); return Number.isFinite(n) ? n : null; }
-    function includesFold(hay = "", needle = "") {
-      return hay.toLowerCase().includes(needle.toLowerCase());
-    }
-
-    function getSorted(list) {
-      const v = sortSel?.value || "default";
-      const arr = [...list];
-      switch (v) {
-        case "feeAsc":       return arr.sort((a,b) => (a.monthlyFee ?? 0) - (b.monthlyFee ?? 0));
-        case "feeDesc":      return arr.sort((a,b) => (b.monthlyFee ?? 0) - (a.monthlyFee ?? 0));
-        case "membersDesc":  return arr.sort((a,b) => (b.memberCount ?? 0) - (a.memberCount ?? 0));
-        case "nameAsc":      return arr.sort((a,b) => String(a.name).localeCompare(String(b.name), "ja"));
-        default:             return list;
-      }
-    }
-
-    function render(list) {
-      const view = getSorted(list);
-      count.textContent = view.length;
-      grid.innerHTML = view.map(c => `
-        <article class="border rounded overflow-hidden">
-          <img src="${c.img}" alt="${c.name}" class="w-full aspect-video object-cover" />
-          <div class="p-3">
-            <div class="text-xs text-gray-500 mb-1">${c.category}・${c.areaPref}${c.areaCity ? " " + c.areaCity : ""}</div>
-            <h3 class="font-semibold mb-1">${c.name}</h3>
-            <div class="text-xs text-gray-600">
-              ${c.level}／${c.memberCount}名／月会費${c.monthlyFee}円${c.trialAvailable ? "／体験可" : ""}${c.immediateJoin ? "／即参加可" : ""}${(c.frequency||[]).length ? "／" + c.frequency.join("・") : ""}
-            </div>
-          </div>
-        </article>
-      `).join("");
-
-      // アクティブ条件のチップ
-      const parts = [];
-      const q = form.q.value.trim(); if (q) parts.push(`キーワード: ${q}`);
-      const pref = form.pref.value; if (pref) parts.push(`都道府県: ${pref}`);
-      const city = form.city.value.trim(); if (city) parts.push(`市区町村: ${city}`);
-      const station = form.station.value.trim(); if (station) parts.push(`駅: ${station}`);
-      const cats = getChecked("category"); if (cats.length) parts.push(`ジャンル: ${cats.join("、")}`);
-      const genders = getChecked("gender"); if (genders.length) parts.push(`構成: ${genders.join("、")}`);
-      const levels = getChecked("level"); if (levels.length) parts.push(`レベル: ${levels.join("、")}`);
-      const ages = getChecked("ageGroup"); if (ages.length) parts.push(`年齢: ${ages.join("、")}`);
-      const wds = getChecked("weekday"); if (wds.length) parts.push(`曜日: ${wds.join("、")}`);
-      const times = getChecked("time"); if (times.length) parts.push(`時間帯: ${times.join("、")}`);
-      const frqs = getChecked("frequency"); if (frqs.length) parts.push(`頻度: ${frqs.join("、")}`);
-      if (form.trial.checked) parts.push("体験可のみ");
-      if (form.immediate.checked) parts.push("即参加可のみ");
-      const feeMin = num(form.feeMin.value); const feeMax = num(form.feeMax.value);
-      if (feeMin != null || feeMax != null) parts.push(`月会費: ${feeMin ?? 0}〜${feeMax ?? "上限なし"}円`);
-      const minMem = num(form.minMembers.value); const maxMem = num(form.maxMembers.value);
-      if (minMem != null || maxMem != null) parts.push(`人数: ${minMem ?? 0}〜${maxMem ?? "上限なし"}`);
-
-      chips.innerHTML = parts.map(p => `<span class="inline-flex items-center px-2 py-1 rounded-full bg-gray-100 border">${p}</span>`).join("");
-    }
-
-    function collectAndFilter() {
-      const q = (form.q.value || "").trim();
-      const categories = getChecked("category");
-      const genders = getChecked("gender");
-      const levels = getChecked("level");
-      const weekdays = getChecked("weekday");
-      const times = getChecked("time");
-      const ages = getChecked("ageGroup");
-      const frequencies = getChecked("frequency");
-      const needTrial = form.trial.checked;
-      const needImmediate = form.immediate.checked;
-
-      const pref = form.pref.value;
-      const city = (form.city.value || "").trim();
-      const station = (form.station.value || "").trim();
-
-      const feeMin = num(form.feeMin.value);
-      const feeMax = num(form.feeMax.value);
-      const minMembers = num(form.minMembers.value);
-      const maxMembers = num(form.maxMembers.value);
-
-      const hit = DATA.filter(c => {
-        if (q && !includesFold(`${c.name} ${c.category} ${c.areaPref} ${c.areaCity} ${c.station} ${(c.tags||[]).join(" ")}`, q)) return false;
-        if (pref && c.areaPref !== pref) return false;
-        if (city && !includesFold(c.areaCity || "", city)) return false;
-        if (station && !includesFold(c.station || "", station)) return false;
-
-        if (categories.length && !categories.includes(c.category)) return false;
-        if (genders.length && !genders.includes(c.gender)) return false;
-        if (levels.length && !levels.includes(c.level)) return false;
-        if (ages.length && !(c.ageGroup || []).some(a => ages.includes(a))) return false;
-
-        if (weekdays.length && !(c.weekday || []).some(d => weekdays.includes(d))) return false;
-        if (times.length && !(c.time || []).some(t => times.includes(t))) return false;
-
-        if (frequencies.length && !(c.frequency || []).some(f => frequencies.includes(f))) return false;
-        if (needTrial && !c.trialAvailable) return false;
-        if (needImmediate && !c.immediateJoin) return false;
-
-        if (feeMin != null && !(c.monthlyFee >= feeMin)) return false;
-        if (feeMax != null && !(c.monthlyFee <= feeMax)) return false;
-
-        if (minMembers != null && !(c.memberCount >= minMembers)) return false;
-        if (maxMembers != null && !(c.memberCount <= maxMembers)) return false;
-
-        return true;
-      });
-
-      lastResults = hit;
-      render(hit);
-    }
-
-    // submit（ボタン）でも動く
-    form.addEventListener("submit", (e) => {
-      e.preventDefault();
-      collectAndFilter();
-    });
-
-    // 並び替え
-    sortSel?.addEventListener("change", () => render(lastResults));
-
-    // リセット
-    resetBtn?.addEventListener("click", () => {
-      form.reset();
-      lastResults = DATA;
-      render(DATA);
-    });
-
-    // 即時反映：入力の変化を監視（軽いデバウンス）
-    const debounce = (fn, ms = 120) => {
-      let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
-    };
-    const trigger = debounce(collectAndFilter, 120);
-    // 文字入力・数値は input、チェック/セレクトは change を拾う
-    form.querySelectorAll('input[type="text"], input[type="search"], input[type="number"]').forEach(el => {
-      el.addEventListener("input", trigger);
-    });
-    form.querySelectorAll('input[type="checkbox"], select').forEach(el => {
-      el.addEventListener("change", trigger);
-    });
-
-    // 初期描画
-    render(DATA);
-  </script>
+  <!-- ピックアップサークル -->
+  <section class="max-w-6xl mx-auto px-4 py-6">
+    <div class="flex items-baseline justify-between mb-4">
+      <h2 class="text-xl md:text-2xl font-bold">ピックアップサークル</h2>
+      <a href="/circles" class="text-indigo-600 text-sm hover:underline">すべて見る</a>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      {featuredCircles.map(cl => (<CircleCard circle={cl} />))}
+    </div>
+  </section>
 </BaseLayout>
