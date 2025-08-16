@@ -14,13 +14,19 @@ const { circle } = Astro.props;
 ---
 
 <a href={`/circles/${circle.id}`} class="block rounded-2xl border shadow hover:shadow-lg transition bg-white overflow-hidden">
-  <img
-    src={circle.image}
-    alt={circle.name}
-    class="w-full h-24 object-cover rounded-t-2xl"
-  />
+  <!-- 固定高さのサムネイル（小さめ） -->
+  <div class="relative w-full h-24 overflow-hidden">
+    <img
+      src={circle.image}
+      alt={circle.name}
+      class="absolute inset-0 !w-full !h-full object-cover"
+      loading="lazy"
+      decoding="async"
+    />
+  </div>
+
   <div class="p-4 space-y-2">
-    <h3 class="text-lg font-bold">{circle.name}</h3>
+    <h3 class="text-lg font-bold line-clamp-2">{circle.name}</h3>
     <p class="text-sm text-gray-600 line-clamp-2">{circle.intro}</p>
     <p class="text-xs text-gray-500">メンバー数: {circle.memberCount}</p>
     <p class="text-xs text-gray-500">エリア: {circle.areaText}</p>
