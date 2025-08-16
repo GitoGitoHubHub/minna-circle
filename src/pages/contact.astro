@@ -59,4 +59,23 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       </button>
     </form>
   </section>
+
+  <!-- Place schema.org JSON-LD -->
+  <script type="application/ld+json">
+    {JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "Place",
+      "name": "MinnaCircle Base",
+      "url": "https://minna-circle.vercel.app/contact",
+      "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "JP"
+      },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": 35.6895,
+        "longitude": 139.6917
+      }
+    })}
+  </script>
 </BaseLayout>
