@@ -1,0 +1,14 @@
+---
+/**
+ * 汎用 JSON-LD 埋め込みコンポーネント
+ * 使用例:
+ *   <JsonLd data={someSchemaObject} />
+ *   <JsonLd data={[schema1, schema2]} />
+ */
+const { data } = Astro.props as { data: any | any[] };
+const payload = Array.isArray(data) ? data : [data];
+const json = JSON.stringify(payload.length === 1 ? payload[0] : payload);
+---
+<script type="application/ld+json">
+  {json}
+</script>
