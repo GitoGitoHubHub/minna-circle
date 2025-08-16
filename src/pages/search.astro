@@ -4,17 +4,14 @@ import EventCard from "../components/EventCard.astro";
 import CircleCard from "../components/CircleCard.astro";
 
 /**
- * クエリパラメータを取得（例: /search?q=バスケ&type=event）
+ * クエリパラメータ（例: /search?q=バスケ&type=event）
  * type: "event" | "circle" | "all"
  */
 const url = new URL(Astro.request.url);
 const q = url.searchParams.get("q") ?? "";
 const type = (url.searchParams.get("type") ?? "all").toLowerCase();
 
-/**
- * ▼ ダミーデータ（本番では API/DB に置き換え）
- *   - ここでは簡易フィルタで q をタイトル/説明/エリアに含むものを抽出
- */
+/** ▼ ダミーデータ（本番では API/DB に置き換え） */
 const allEvents = [
   { id:"ev-001", title:"朝活ランニング＠木場公園", description:"初心者歓迎。会話しながら軽く3km！", image:"/og.png", dateText:"2025-09-01 07:00", placeText:"木場公園集合", isFeatured:true },
   { id:"ev-002", title:"週末バスケ個人参加", description:"経験不問。楽しく汗をかきましょう！", image:"/og.png", dateText:"2025-09-06 18:00", placeText:"江東区スポセン", isFeatured:false },
@@ -44,18 +41,44 @@ const showCircles = type === "circle" || type === "all";
 <BaseLayout title={`検索 | MinnaCircle`} lang="ja">
   <!-- ヘッダー -->
   <section class="max-w-6xl mx-auto px-4 pt-8">
-    <h1 class="text-2xl md:text-3xl font-extrabold">検索結果</h1>
+    <h1 class="text-2xl md:text-3xl font-extrabold">検索</h1>
     <p class="text-gray-600 mt-1 text-sm md:text-base">
-      キーワード: <span class="font-semibold">{q || "（未指定）"}</span>
-      <span class="ml-2">/ 種別: <span class="font-semibold uppercase">{type}</span></span>
+      キーワードと種別を指定して検索できます。
     </p>
 
-    <!-- 簡易フィルタ（リンク遷移） -->
-    <div class="mt-4 flex flex-wrap gap-2">
-      <a href={`/search?q=${encodeURIComponent(q)}&type=all`} class="text-xs md:text-sm px-3 py-1 rounded-full border hover:bg-gray-50">すべて</a>
-      <a href={`/search?q=${encodeURIComponent(q)}&type=event`} class="text-xs md:text-sm px-3 py-1 rounded-full border hover:bg-gray-50">イベント</a>
-      <a href={`/search?q=${encodeURIComponent(q)}&type=circle`} class="text-xs md:text-sm px-3 py-1 rounded-full border hover:bg-gray-50">サークル</a>
-    </div>
+    <!-- 検索フォーム（method=GET で /search に送信） -->
+    <form action="/search" method="get" class="mt-4 grid grid-cols-1 md:grid-cols-[1fr_180px_auto_auto] gap-2 items-center">
+      <label class="sr-only" for="q">キーワード</label>
+      <input
+        id="q"
+        name="q"
+        type="search"
+        placeholder="例）バスケ / 英会話 / 清澄白河"
+        value={q}
+        class="w-full rounded-xl border px-4 py-2"
+      />
+
+      <label class="sr-only" for="type">種別</label>
+      <select id="type" name="type" class="rounded-xl border px-3 py-2">
+        <option value="all" selected={type==="all"}>すべて</option>
+        <option value="event" selected={type==="event"}>イベント</option>
+        <option value="circle" selected={type==="circle"}>サークル</option>
+      </select>
+
+      <button type="submit" class="rounded-xl bg-indigo-600 text-white px-5 py-2 shadow hover:bg-indigo-700 transition">
+        検索
+      </button>
+
+      <a href="/search" class="text-sm text-indigo-600 hover:underline justify-self-start md:justify-self-auto">
+        クリア
+      </a>
+    </form>
+
+    <!-- 現在の条件の表示 -->
+    <p class="text-gray-600 mt-2 text-xs md:text-sm">
+      現在の条件: キーワード=<span class="font-semibold">{q || "（未指定）"}</span>
+      / 種別=<span class="font-semibold uppercase">{type}</span>
+    </p>
   </section>
 
   <!-- イベント結果 -->
