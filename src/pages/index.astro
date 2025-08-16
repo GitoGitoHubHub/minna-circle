@@ -2,6 +2,8 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import EventCard from "../components/EventCard.astro";
 import CircleCard from "../components/CircleCard.astro";
+import JsonLd from "../components/JsonLd.astro";
+import { buildOrganization, buildEvent, buildPlace } from "../lib/schema";
 
 /** ▼ ダミーデータ（本番ではAPI/サーバデータに差し替え） */
 const featuredEvents = [
@@ -64,51 +66,51 @@ const featuredCircles = [
   }
 ];
 
-/** ▼ JSON-LD（構造化データ） */
-const siteUrl = (Astro.site && Astro.site.href) ? Astro.site.href.replace(/\/$/, "") : "";
-const organizationLd = {
-  "@context": "https://schema.org",
-  "@type": "Organization",
-  "name": "MinnaCircle",
-  ...(siteUrl ? { "url": siteUrl } : {}),
-  "logo": "/og.png"
+/** ▼ URL/ISO 変換ユーティリティ */
+const siteOrigin = (Astro.site && Astro.site.href) ? Astro.site.href.replace(/\/$/, "") : "";
+const toJstIso = (s: string) => {
+  const [date, hm] = s.split(" ");
+  return `${date}T${hm}:00+09:00`;
 };
 
-const websiteLd = {
+/** ▼ JSON-LD（構造化データ） */
+const orgLd = buildOrganization({
+  name: "MinnaCircle",
+  url: siteOrigin || undefined,
+  logo: siteOrigin ? `${siteOrigin}/og.png` : undefined,
+});
+
+const webSiteLd = {
   "@context": "https://schema.org",
   "@type": "WebSite",
   "name": "MinnaCircle",
-  ...(siteUrl ? { "url": siteUrl } : {}),
-  "potentialAction": {
-    "@type": "SearchAction",
-    "target": `${siteUrl}/search?q={query}`,
-    "query-input": "required name=query"
-  }
+  ...(siteOrigin ? { "url": siteOrigin } : {}),
+  ...(siteOrigin ? {
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": `${siteOrigin}/search?q={query}`,
+      "query-input": "required name=query"
+    }
+  } : {})
 };
 
-/** Eventスキーマ（ダミー配列から生成） */
-const eventsLd = featuredEvents.map(ev => ({
-  "@context": "https://schema.org",
-  "@type": "Event",
-  "name": ev.title,
-  "description": ev.description,
-  ...(siteUrl ? { "url": `${siteUrl}/events/${ev.id}` } : {}),
-  "image": ev.image,
-  "eventStatus": "https://schema.org/EventScheduled",
-  "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
-  "startDate": ev.dateText, // 本番では ISO 形式へ整形推奨
-  "location": { "@type": "Place", "name": ev.placeText },
-  "organizer": { "@type": "Organization", "name": "MinnaCircle", ...(siteUrl ? { "url": siteUrl } : {}) }
-}));
+/** Eventスキーマ（ダミー配列から生成・JST ISOで出力） */
+const eventsLd = featuredEvents.map((ev) =>
+  buildEvent({
+    name: ev.title,
+    description: ev.description,
+    startDate: toJstIso(ev.dateText),
+    image: [ev.image],
+    location: buildPlace({ name: ev.placeText }),
+    organizer: orgLd,
+    // 価格などはトップでは省略（詳細ページで offers を付与）
+  })
+);
 ---
 
 <BaseLayout title="MinnaCircle | みんなのためのサークル募集・検索" lang="ja">
-  <!-- JSON-LD -->
-  <script type="application/ld+json">{JSON.stringify(organizationLd)}</script>
-  <script type="application/ld+json">{JSON.stringify(websiteLd)}</script>
-  {eventsLd.map((e) => (
-    <script type="application/ld+json">{JSON.stringify(e)}</script>
-  ))}
+  <!-- JSON-LD（Organization / WebSite / 注目Event群） -->
+  <JsonLd data={[orgLd, webSiteLd, ...eventsLd]} />
 
   <!-- Hero（検索フォーム付き） -->
   <section class="max-w-6xl mx-auto px-4 py-8 md:py-12">
