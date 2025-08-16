@@ -96,40 +96,51 @@ const eventsLd = featuredEvents.map(ev => ({
   "image": ev.image,
   "eventStatus": "https://schema.org/EventScheduled",
   "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
-  "startDate": ev.dateText, // ISO形式に合わせる場合は本番で調整
-  "location": {
-    "@type": "Place",
-    "name": ev.placeText
-  },
-  "organizer": {
-    "@type": "Organization",
-    "name": "MinnaCircle",
-    ...(siteUrl ? { "url": siteUrl } : {})
-  }
+  "startDate": ev.dateText, // 本番では ISO 形式へ整形推奨
+  "location": { "@type": "Place", "name": ev.placeText },
+  "organizer": { "@type": "Organization", "name": "MinnaCircle", ...(siteUrl ? { "url": siteUrl } : {}) }
 }));
 ---
 
 <BaseLayout title="MinnaCircle | みんなのためのサークル募集・検索" lang="ja">
-  <!-- JSON-LD（複数スクリプトで挿入） -->
-  <script type="application/ld+json">
-    {JSON.stringify(organizationLd)}
-  </script>
-  <script type="application/ld+json">
-    {JSON.stringify(websiteLd)}
-  </script>
+  <!-- JSON-LD -->
+  <script type="application/ld+json">{JSON.stringify(organizationLd)}</script>
+  <script type="application/ld+json">{JSON.stringify(websiteLd)}</script>
   {eventsLd.map((e) => (
     <script type="application/ld+json">{JSON.stringify(e)}</script>
   ))}
 
-  <!-- Hero -->
+  <!-- Hero（検索フォーム付き） -->
   <section class="max-w-6xl mx-auto px-4 py-8 md:py-12">
     <div class="bg-indigo-50 rounded-2xl p-6 md:p-10">
       <h1 class="text-2xl md:text-4xl font-extrabold mb-3">趣味でつながる、みんなのサークル</h1>
-      <p class="text-gray-700 md:text-lg">
-        近くのサークルやイベントを検索して、気軽に参加しよう。
-      </p>
-      <div class="mt-6 flex gap-3">
-        <a href="/search" class="bg-indigo-600 text-white px-5 py-2 rounded-xl shadow hover:bg-indigo-700 transition text-sm md:text-base">サークルを探す</a>
+      <p class="text-gray-700 md:text-lg">近くのサークルやイベントを検索して、気軽に参加しよう。</p>
+
+      <!-- 検索フォーム（GET /search） -->
+      <form action="/search" method="get" class="mt-6 grid grid-cols-1 md:grid-cols-[1fr_180px_auto] gap-2 items-center">
+        <label class="sr-only" for="q">キーワード</label>
+        <input
+          id="q"
+          name="q"
+          type="search"
+          placeholder="例）バスケ / 英会話 / 清澄白河"
+          class="w-full rounded-xl border px-4 py-2"
+        />
+
+        <label class="sr-only" for="type">種別</label>
+        <select id="type" name="type" class="rounded-xl border px-3 py-2">
+          <option value="all" selected>すべて</option>
+          <option value="event">イベント</option>
+          <option value="circle">サークル</option>
+        </select>
+
+        <button type="submit" class="rounded-xl bg-indigo-600 text-white px-5 py-2 shadow hover:bg-indigo-700 transition">
+          検索
+        </button>
+      </form>
+
+      <div class="mt-4 flex gap-3">
+        <a href="/search" class="bg-white text-indigo-700 px-5 py-2 rounded-xl shadow hover:bg-gray-50 transition text-sm md:text-base">詳細検索へ</a>
         <a href="/vendor/new" class="text-indigo-700 font-semibold hover:underline text-sm md:text-base">サークルを作成</a>
       </div>
     </div>
