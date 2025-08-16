@@ -18,9 +18,9 @@ const CIRCLES = [
     ageGroup: ["小学生"],
     monthlyFee: 2000,
     joinFee: 0,
-    trialAvailable: true,           // 体験可
-    immediateJoin: false,           // 即参加可
-    frequency: ["週1回"],           // 活動頻度
+    trialAvailable: true,
+    immediateJoin: false,
+    frequency: ["週1回"],
     tags: ["体験可"],
     img: "/og.png"
   },
@@ -377,9 +377,7 @@ const FEATURED_EVENTS = EVENTS.slice(0, 2);
       chips.innerHTML = parts.map(p => `<span class="inline-flex items-center px-2 py-1 rounded-full bg-gray-100 border">${p}</span>`).join("");
     }
 
-    form.addEventListener("submit", (e) => {
-      e.preventDefault();
-
+    function collectAndFilter() {
       const q = (form.q.value || "").trim();
       const categories = getChecked("category");
       const genders = getChecked("gender");
@@ -429,17 +427,38 @@ const FEATURED_EVENTS = EVENTS.slice(0, 2);
 
       lastResults = hit;
       render(hit);
+    }
+
+    // submit（ボタン）でも動く
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      collectAndFilter();
     });
 
+    // 並び替え
     sortSel?.addEventListener("change", () => render(lastResults));
+
+    // リセット
     resetBtn?.addEventListener("click", () => {
       form.reset();
       lastResults = DATA;
       render(DATA);
     });
 
+    // 即時反映：入力の変化を監視（軽いデバウンス）
+    const debounce = (fn, ms = 120) => {
+      let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+    };
+    const trigger = debounce(collectAndFilter, 120);
+    // 文字入力・数値は input、チェック/セレクトは change を拾う
+    form.querySelectorAll('input[type="text"], input[type="search"], input[type="number"]').forEach(el => {
+      el.addEventListener("input", trigger);
+    });
+    form.querySelectorAll('input[type="checkbox"], select').forEach(el => {
+      el.addEventListener("change", trigger);
+    });
+
     // 初期描画
     render(DATA);
   </script>
 </BaseLayout>
-
