@@ -1,81 +1,173 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
+
+const title = "Contact | MinnaCircle";
+const description =
+  "MinnaCircleへのご意見・ご要望・不具合報告はこちらのフォームからお送りください。運営ポリシーに基づき、安心・安全なサービス改善に努めます。";
+
+/** JSON-LD（ContactPage + Organization.contactPoint） */
+const siteUrl = (Astro.site && Astro.site.href) ? Astro.site.href.replace(/\/$/, "") : "";
+const contactPageLd = {
+  "@context": "https://schema.org",
+  "@type": "ContactPage",
+  "name": "Contact - MinnaCircle",
+  ...(siteUrl ? { "url": `${siteUrl}/contact` } : {})
+};
+const contactPointLd = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "MinnaCircle",
+  "contactPoint": [{
+    "@type": "ContactPoint",
+    "contactType": "customer support",
+    "availableLanguage": ["Japanese", "English", "Chinese"],
+    ...(siteUrl ? { "url": `${siteUrl}/contact` } : {})
+  }]
+};
 ---
 
-<BaseLayout
-  title="お問い合わせ | MinnaCircle"
-  description="MinnaCircleへのお問い合わせページです。"
-  path="/contact"
-  lang="ja"
->
-  <section class="max-w-3xl mx-auto px-4 py-10">
-    <h1 class="text-2xl md:text-3xl font-bold mb-6">お問い合わせ</h1>
-    <p class="mb-6">
-      MinnaCircleに関するご質問・ご要望は、以下のフォームよりお気軽にご連絡ください。
-    </p>
+<BaseLayout title={title} lang="ja" meta_description={description}>
+  <!-- JSON-LD -->
+  <script type="application/ld+json">{JSON.stringify(contactPageLd)}</script>
+  <script type="application/ld+json">{JSON.stringify(contactPointLd)}</script>
 
-    <form class="space-y-4">
-      <div>
-        <label for="name" class="block text-sm font-medium mb-1">お名前</label>
-        <input
-          type="text"
-          id="name"
-          name="name"
-          required
-          class="w-full border rounded px-3 py-2"
-          placeholder="山田 太郎"
-        />
+  <section class="max-w-3xl mx-auto px-4 py-10 md:py-14">
+    <header class="mb-8">
+      <h1 class="text-2xl md:text-4xl font-extrabold">お問い合わせ</h1>
+      <p class="text-gray-600 mt-2 md:text-lg">
+        改善要望・不具合報告・問い合わせ種別を選んでお送りください。返信が必要な場合は正しいメールアドレスをご記入ください。
+      </p>
+    </header>
+
+    <!-- 完了メッセージ（ダミー送信で表示） -->
+    <div id="contact-success" class="hidden bg-green-50 border border-green-200 text-green-800 rounded-xl p-4 mb-6">
+      送信ありがとうございました。内容を受け付けました。（デモ動作）<br />
+      ※本番では送信内容をスプレッドシートに保存し、通知を行います。
+    </div>
+
+    <!-- お問い合わせフォーム（ダミー送信） -->
+    <form id="contact-form" class="bg-white rounded-2xl shadow p-6 md:p-8 space-y-5" novalidate>
+      <!-- CSRF風/スパム対策（ハニーポット） -->
+      <input type="text" name="website" class="hidden" tabindex="-1" autocomplete="off" />
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label for="name" class="block text-sm font-medium mb-1">お名前 <span class="text-red-600">*</span></label>
+          <input id="name" name="name" type="text" required maxlength="80"
+                 class="w-full rounded-xl border px-4 py-2" placeholder="山田 太郎" />
+          <p class="text-xs text-gray-500 mt-1">ニックネームでも可</p>
+        </div>
+        <div>
+          <label for="email" class="block text-sm font-medium mb-1">メールアドレス <span class="text-red-600">*</span></label>
+          <input id="email" name="email" type="email" required maxlength="120"
+                 class="w-full rounded-xl border px-4 py-2" placeholder="you@example.com" />
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label for="topic" class="block text-sm font-medium mb-1">問い合わせ種別 <span class="text-red-600">*</span></label>
+          <select id="topic" name="topic" required class="w-full rounded-xl border px-3 py-2">
+            <option value="">選択してください</option>
+            <option value="feature">機能の要望</option>
+            <option value="bug">不具合の報告</option>
+            <option value="policy">ルール/規約について</option>
+            <option value="other">その他</option>
+          </select>
+        </div>
+        <div>
+          <label for="lang" class="block text-sm font-medium mb-1">希望する対応言語</label>
+          <select id="lang" name="lang" class="w-full rounded-xl border px-3 py-2">
+            <option value="ja" selected>日本語</option>
+            <option value="en">English</option>
+            <option value="zh">中文</option>
+          </select>
+        </div>
       </div>
 
       <div>
-        <label for="email" class="block text-sm font-medium mb-1">メールアドレス</label>
-        <input
-          type="email"
-          id="email"
-          name="email"
-          required
-          class="w-full border rounded px-3 py-2"
-          placeholder="you@example.com"
-        />
+        <label for="message" class="block text-sm font-medium mb-1">内容 <span class="text-red-600">*</span></label>
+        <textarea id="message" name="message" required rows="6" maxlength="1000"
+                  class="w-full rounded-xl border px-4 py-2"
+                  placeholder="できるだけ具体的にご記入ください（最大全角1000文字）"></textarea>
+        <div class="mt-1 flex items-center justify-between text-xs text-gray-500">
+          <span>1000文字まで</span>
+          <span id="message-count">0 / 1000</span>
+        </div>
       </div>
 
-      <div>
-        <label for="message" class="block text-sm font-medium mb-1">メッセージ</label>
-        <textarea
-          id="message"
-          name="message"
-          rows="4"
-          required
-          class="w-full border rounded px-3 py-2"
-          placeholder="お問い合わせ内容を入力してください。"
-        ></textarea>
+      <fieldset class="rounded-xl border px-4 py-3">
+        <legend class="text-sm font-medium">添付予定（任意）</legend>
+        <div class="text-xs text-gray-600 mt-1">
+          画像や資料の添付がある場合は、このフォーム送信後に別途ご案内するメール宛にお送りください。
+        </div>
+      </fieldset>
+
+      <div class="flex items-start gap-2">
+        <input id="agree" name="agree" type="checkbox" required class="mt-1" />
+        <label for="agree" class="text-sm text-gray-700">
+          <span class="font-medium">同意事項：</span>個人情報の取り扱い・利用規約に同意します。
+          （未成年の方は保護者の同意が必要です）
+        </label>
       </div>
 
-      <button
-        type="submit"
-        class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-      >
-        送信
-      </button>
+      <div class="flex gap-3 pt-2">
+        <button type="submit" class="bg-indigo-600 text-white px-5 py-2 rounded-xl shadow hover:bg-indigo-700 transition">
+          送信
+        </button>
+        <button type="reset" class="px-5 py-2 rounded-xl border hover:bg-gray-50 transition">
+          クリア
+        </button>
+        <a href="/" class="ml-auto text-indigo-600 text-sm hover:underline">トップへ戻る</a>
+      </div>
     </form>
+
+    <section class="mt-8 bg-indigo-50 rounded-2xl p-6">
+      <h2 class="text-lg md:text-xl font-bold mb-2">運営からのお願い</h2>
+      <ul class="list-disc pl-6 text-sm text-gray-700 space-y-1">
+        <li>不具合報告は「再現手順・端末/ブラウザ・スクリーンショット」があると助かります。</li>
+        <li>安全な場を守るため、通報やガイドライン違反の情報提供にご協力ください。</li>
+        <li>重要連絡は <a href="/about" class="text-indigo-700 underline">/about</a> にも追記していきます。</li>
+      </ul>
+    </section>
   </section>
 
-  <!-- Place schema.org JSON-LD -->
-  <script type="application/ld+json">
-    {JSON.stringify({
-      "@context": "https://schema.org",
-      "@type": "Place",
-      "name": "MinnaCircle Base",
-      "url": "https://minna-circle.vercel.app/contact",
-      "address": {
-        "@type": "PostalAddress",
-        "addressCountry": "JP"
-      },
-      "geo": {
-        "@type": "GeoCoordinates",
-        "latitude": 35.6895,
-        "longitude": 139.6917
+  <!-- 最小限のクライアントスクリプト（ダミー送信 & 文字数カウント） -->
+  <script>
+    // 文字数カウンタ
+    (function () {
+      const msg = document.getElementById('message');
+      const counter = document.getElementById('message-count');
+      if (msg && counter) {
+        const update = () => (counter.textContent = (msg.value.length || 0) + " / 1000");
+        msg.addEventListener('input', update);
+        update();
       }
-    })}
+    })();
+
+    // ダミー送信（将来 Apps Script 等に差し替え）
+    (function () {
+      const form = document.getElementById('contact-form');
+      const success = document.getElementById('contact-success');
+      if (!form) return;
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        // 簡易バリデーション
+        const data = new FormData(form);
+        if ((data.get('website') || '').toString().trim() !== "") return; // ハニーポット
+        if (!data.get('name') || !data.get('email') || !data.get('topic') || !data.get('message') || !data.get('agree')) {
+          alert('必須項目を入力してください。');
+          return;
+        }
+        // 成功表示
+        success?.classList.remove('hidden');
+        form.reset();
+        // カウンタ初期化
+        const counter = document.getElementById('message-count');
+        if (counter) counter.textContent = "0 / 1000";
+        // ページ先頭へ
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    })();
   </script>
 </BaseLayout>
