@@ -1,11 +1,203 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
-import HeroSection from "../components/HeroSection.astro";
 
-const canonical = "https://minna-circle.vercel.app/";
+/** v1 ダミーデータ（将来はAPI/DBに置き換え） */
+const CIRCLES = [
+  { id: "c1", name: "DEARS", category: "バスケットボール", area: "東京都", level: "初心者歓迎", memberCount: 18, gender: "mixed", weekday: ["土曜"], time: ["9-12"], tags: ["小学生", "体験可"], img: "/og.png" },
+  { id: "c2", name: "NAKAGAWA FC", category: "サッカー", area: "神奈川県", level: "経験者中心", memberCount: 26, gender: "mixed", weekday: ["日曜"], time: ["13-15"], tags: ["中学生"], img: "/og.png" },
+  { id: "c3", name: "藤井クラブ", category: "卓球", area: "埼玉県", level: "誰でもOK", memberCount: 14, gender: "mixed", weekday: ["平日"], time: ["19-21"], tags: ["社会人"], img: "/og.png" },
+  { id: "c4", name: "川崎STC", category: "テニス", area: "神奈川県", level: "初級", memberCount: 20, gender: "mixed", weekday: ["土曜","日曜"], time: ["15-18"], tags: ["体験可"], img: "/og.png" },
+];
+
+const EVENTS = [
+  { id: "e1", title: "MinnaCircle Meetup #1", date: "2025-09-20", area: "東京都", category: "交流", img: "/og.png", url: "/events/meetup-1" },
+  { id: "e2", title: "はじめてのダンス体験会", date: "2025-10-05", area: "神奈川県", category: "ダンス", img: "/og.png", url: "#" },
+];
+
+const RECOMMENDED_CIRCLES = CIRCLES.slice(0, 3);
+const FEATURED_EVENTS = EVENTS.slice(0, 2);
 ---
-<BaseLayout title="MinnaCircle | ホーム" lang="ja" canonical={canonical}>
-  <section class="space-y-3">
-    <HeroSection lang="ja" />
+
+<BaseLayout
+  title="仲間をつくろう | MinnaCircle"
+  description="趣味・サークルを見つけて参加しよう。詳細な条件でマッチングできます。"
+  path="/"
+  lang="ja"
+>
+  <!-- Hero -->
+  <section class="max-w-5xl mx-auto px-4 py-10 text-center">
+    <h1 class="text-3xl md:text-4xl font-bold mb-3">仲間をつくろう</h1>
+    <p class="text-gray-600">サークルの検索と募集一覧から、あなたに合う活動を見つけよう。</p>
   </section>
+
+  <!-- 検索＆結果レイアウト -->
+  <section class="max-w-6xl mx-auto px-4 pb-16 grid grid-cols-1 md:grid-cols-12 gap-8">
+    <!-- 絞り込み（左） -->
+    <aside class="md:col-span-4 lg:col-span-3 border rounded p-4" id="filters">
+      <form id="searchForm" class="space-y-5">
+        <div>
+          <label class="block text-sm font-medium mb-1">キーワード</label>
+          <input type="search" name="q" placeholder="例）サッカー、渋谷" class="w-full border rounded px-3 py-2" />
+        </div>
+
+        <div>
+          <span class="block text-sm font-medium mb-1">カテゴリ</span>
+          <div class="space-y-2 max-h-40 overflow-auto border rounded p-2">
+            {["サッカー","バスケットボール","テニス","卓球","ランニング","ダンス","バドミントン"].map(c => (
+              <label class="flex items-center gap-2"><input type="checkbox" name="category" value={c} /> {c}</label>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <span class="block text-sm font-medium mb-1">活動エリア</span>
+          <select name="area" class="w-full border rounded px-3 py-2">
+            <option value="">指定なし</option>
+            {["東京都","神奈川県","埼玉県","千葉県"].map(a => <option value={a}>{a}</option>)}
+          </select>
+        </div>
+
+        <div>
+          <span class="block text-sm font-medium mb-1">メンバー構成</span>
+          <label class="block"><input type="checkbox" name="gender" value="mixed" /> 男女混合</label>
+          <label class="block"><input type="checkbox" name="gender" value="men" /> 男性のみ</label>
+          <label class="block"><input type="checkbox" name="gender" value="women" /> 女性のみ</label>
+        </div>
+
+        <div>
+          <span class="block text-sm font-medium mb-1">レベル</span>
+          {["誰でもOK","初心者歓迎","初級","経験者中心"].map(l => (
+            <label class="block"><input type="checkbox" name="level" value={l} /> {l}</label>
+          ))}
+        </div>
+
+        <div>
+          <span class="block text-sm font-medium mb-1">活動曜日</span>
+          {["平日","土曜","日曜"].map(d => (
+            <label class="block"><input type="checkbox" name="weekday" value={d} /> {d}</label>
+          ))}
+        </div>
+
+        <div>
+          <span class="block text-sm font-medium mb-1">活動時間帯</span>
+          {["9-12","13-15","15-18","19-21"].map(t => (
+            <label class="block"><input type="checkbox" name="time" value={t} /> {t}</label>
+          ))}
+        </div>
+
+        <button type="submit" class="w-full bg-yellow-500 text-white py-2 rounded hover:bg-yellow-600">検索</button>
+      </form>
+    </aside>
+
+    <!-- 結果（右） -->
+    <div class="md:col-span-8 lg:col-span-9">
+      <!-- 検索結果ヘッダ -->
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="font-semibold">検索結果</h2>
+        <div class="text-sm text-gray-500"><span id="resultCount">{CIRCLES.length}</span> 件</div>
+      </div>
+
+      <!-- 結果グリッド -->
+      <div id="resultGrid" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {CIRCLES.map(c => (
+          <article class="border rounded overflow-hidden">
+            <img src={c.img} alt={c.name} class="w-full aspect-video object-cover" />
+            <div class="p-3">
+              <div class="text-xs text-gray-500 mb-1">{c.category}・{c.area}</div>
+              <h3 class="font-semibold mb-1">{c.name}</h3>
+              <div class="text-xs text-gray-600">{c.level}／{c.memberCount}名</div>
+            </div>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- おすすめサークル -->
+  <section class="max-w-6xl mx-auto px-4 pb-16">
+    <h2 class="text-xl md:text-2xl font-bold mb-4">おすすめサークル</h2>
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {RECOMMENDED_CIRCLES.map(c => (
+        <article class="border rounded overflow-hidden">
+          <img src={c.img} alt={c.name} class="w-full aspect-video object-cover" />
+          <div class="p-3">
+            <div class="text-xs text-gray-500 mb-1">{c.category}・{c.area}</div>
+            <h3 class="font-semibold">{c.name}</h3>
+          </div>
+        </article>
+      ))}
+    </div>
+  </section>
+
+  <!-- 注目イベント -->
+  <section class="max-w-6xl mx-auto px-4 pb-20">
+    <h2 class="text-xl md:text-2xl font-bold mb-4">注目イベント</h2>
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {FEATURED_EVENTS.map(e => (
+        <a href={e.url} class="border rounded overflow-hidden block">
+          <img src={e.img} alt={e.title} class="w-full aspect-video object-cover" />
+          <div class="p-3">
+            <div class="text-xs text-gray-500 mb-1">{e.category}・{e.area}</div>
+            <h3 class="font-semibold">{e.title}</h3>
+            <div class="text-xs text-gray-600">{e.date}</div>
+          </div>
+        </a>
+      ))}
+    </div>
+  </section>
+
+  <!-- クライアント側簡易フィルタ（v1） -->
+  <script>
+    const DATA = JSON.parse(`<?= JSON.stringify(CIRCLES) ?>`);
+    const grid = document.getElementById("resultGrid");
+    const count = document.getElementById("resultCount");
+    const form = document.getElementById("searchForm");
+
+    function arr(v) { return Array.isArray(v) ? v : [v]; }
+    function getChecked(name) {
+      return [...form.querySelectorAll(\`input[name="\${name}"]:checked\`)].map(i => i.value);
+    }
+
+    function render(list) {
+      count.textContent = list.length;
+      grid.innerHTML = list.map(c => `
+        <article class="border rounded overflow-hidden">
+          <img src="${c.img}" alt="${c.name}" class="w-full aspect-video object-cover" />
+          <div class="p-3">
+            <div class="text-xs text-gray-500 mb-1">${c.category}・${c.area}</div>
+            <h3 class="font-semibold mb-1">${c.name}</h3>
+            <div class="text-xs text-gray-600">${c.level}／${c.memberCount}名</div>
+          </div>
+        </article>
+      `).join("");
+    }
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const q = (form.q.value || "").trim();
+
+      const categories = getChecked("category");
+      const genders = getChecked("gender");
+      const levels = getChecked("level");
+      const weekdays = getChecked("weekday");
+      const times = getChecked("time");
+      const area = form.area.value;
+
+      const hit = DATA.filter(c => {
+        if (q && !`${c.name} ${c.category} ${c.area} ${c.tags?.join(" ")}`.includes(q)) return false;
+        if (area && c.area !== area) return false;
+        if (categories.length && !categories.includes(c.category)) return false;
+        if (genders.length && !genders.includes(c.gender)) return false;
+        if (levels.length && !levels.includes(c.level)) return false;
+        if (weekdays.length && !weekdays.some(d => c.weekday?.includes(d))) return false;
+        if (times.length && !times.some(t => c.time?.includes(t))) return false;
+        return true;
+      });
+
+      render(hit);
+    });
+
+    // 初期描画
+    render(DATA);
+  </script>
 </BaseLayout>
