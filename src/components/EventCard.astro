@@ -1,38 +1,43 @@
 ---
-interface Props {
+const { event } = Astro.props as {
   event: {
     id: string;
     title: string;
-    description: string;
-    image: string;
-    dateText: string;
-    placeText: string;
-    areaText: string;
-    fee: number;
-    popularity: number;
+    description?: string;
+    image?: string;
+    dateText?: string;
+    placeText?: string;
+    areaText?: string;
+    fee?: number;
+    popularity?: number;
   };
-}
-const { event } = Astro.props;
+};
 ---
 
 <a href={`/events/${event.id}`} class="block rounded-2xl border shadow hover:shadow-lg transition bg-white overflow-hidden">
-  <!-- 固定高さのサムネイル（小さめ） -->
-  <div class="relative w-full h-24 overflow-hidden">
+  <!-- 固定高さサムネイル（インラインstyleで確実に固定） -->
+  <div class="relative w-full overflow-hidden" style="height:96px">
     <img
-      src={event.image}
+      src={event.image || "/og.png"}
       alt={event.title}
-      class="absolute inset-0 !w-full !h-full object-cover"
+      class="absolute inset-0 w-full h-full object-cover"
       loading="lazy"
       decoding="async"
     />
   </div>
 
   <div class="p-4 space-y-2">
-    <h3 class="text-lg font-bold line-clamp-2">{event.title}</h3>
-    <p class="text-sm text-gray-600 line-clamp-2">{event.description}</p>
-    <p class="text-xs text-gray-500">{event.dateText} @ {event.placeText}</p>
-    <p class="text-xs text-gray-500">エリア: {event.areaText}</p>
-    <p class="text-xs text-gray-500">参加費: {event.fee === 0 ? "無料" : `¥${event.fee.toLocaleString()}`}</p>
-    <p class="text-xs text-gray-500">人気度: {event.popularity}</p>
+    <h3 class="text-lg font-bold">{event.title}</h3>
+    {event.description && <p class="text-sm text-gray-600">{event.description}</p>}
+    {(event.dateText || event.placeText) && (
+      <p class="text-xs text-gray-500">
+        {event.dateText || ""}{event.placeText ? ` @ ${event.placeText}` : ""}
+      </p>
+    )}
+    {event.areaText && <p class="text-xs text-gray-500">エリア: {event.areaText}</p>}
+    {typeof event.fee === "number" && (
+      <p class="text-xs text-gray-500">参加費: {event.fee === 0 ? "無料" : `¥${event.fee.toLocaleString?.() || event.fee}`}</p>
+    )}
+    {typeof event.popularity === "number" && <p class="text-xs text-gray-500">人気度: {event.popularity}</p>}
   </div>
 </a>
