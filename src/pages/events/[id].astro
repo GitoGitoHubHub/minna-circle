@@ -1,5 +1,7 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import JsonLd from "../../components/JsonLd.astro";
+import { buildOrganization, buildPlace, buildEvent } from "../../lib/schema";
 
 /**
  * ダミーデータ（これまでの一覧とIDを合わせています）
@@ -62,7 +64,6 @@ const { id } = Astro.params;
 /** 本来はAPI/DBから該当IDを取得 */
 const event = allEvents.find((e) => e.id === id);
 if (!event) {
-  // 見つからない場合は404にフォールバック
   throw Astro.redirect("/404");
 }
 
@@ -71,47 +72,39 @@ const pageTitle = `${event.title} | MinnaCircle`;
 const pageDesc  = `${event.description}`;
 
 /** サイトURL（astro.configのsiteが設定されている場合に使用） */
-const siteUrl = (Astro.site && Astro.site.href) ? Astro.site.href.replace(/\/$/, "") : "";
+const siteOrigin = (Astro.site && Astro.site.href) ? Astro.site.href.replace(/\/$/, "") : "";
 
-/** ISO文字列ユーティリティ（例：2025-09-01 07:00 → 2025-09-01T07:00:00+09:00） */
-const toISO = (s: string) => new Date(s.replace(" ", "T") + "+09:00").toISOString();
-
-/** JSON-LD: Event */
-const eventLd = {
-  "@context": "https://schema.org",
-  "@type": "Event",
-  "name": event.title,
-  "description": event.description,
-  ...(siteUrl ? { "url": `${siteUrl}/events/${event.id}` } : {}),
-  "image": event.image,
-  "eventStatus": "https://schema.org/EventScheduled",
-  "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
-  "startDate": toISO(event.dateText),
-  ...(event.endText ? { "endDate": toISO(event.endText) } : {}),
-  "location": {
-    "@type": "Place",
-    "name": event.placeText,
-    "address": {
-      "@type": "PostalAddress",
-      "addressLocality": event.areaText,
-      "addressCountry": "JP"
-    }
-  },
-  "organizer": {
-    "@type": "Organization",
-    "name": event.organizer,
-    ...(siteUrl ? { "url": siteUrl } : {})
-  },
-  ...(Number.isFinite(event.fee) ? {
-    "offers": {
-      "@type": "Offer",
-      "price": String(event.fee),
-      "priceCurrency": "JPY",
-      "availability": "https://schema.org/InStock",
-      ...(siteUrl ? { "url": `${siteUrl}/events/${event.id}/join` } : {})
-    }
-  } : {})
+/** "YYYY-MM-DD HH:mm" → "YYYY-MM-DDTHH:mm:00+09:00"（日本時間のまま出力） */
+const toJstOffset = (s: string) => {
+  const [date, hm] = s.split(" ");
+  return `${date}T${hm}:00+09:00`;
 };
+
+/** Organizer / Place / Event の JSON-LD（schema.ts を使用） */
+const organizer = buildOrganization({
+  name: event.organizer,
+  url: siteOrigin || undefined,
+});
+
+const place = buildPlace({
+  name: event.placeText,
+  addressLocality: event.areaText,
+  addressCountry: "JP",
+  // latitude / longitude は実データ接続時に追加
+});
+
+const schemaEvent = buildEvent({
+  name: event.title,
+  description: event.description,
+  startDate: toJstOffset(event.dateText),
+  endDate: event.endText ? toJstOffset(event.endText) : undefined,
+  location: place,
+  organizer,
+  image: [event.image],
+  offers: Number.isFinite(event.fee)
+    ? { price: String(event.fee), priceCurrency: "JPY", url: siteOrigin ? `${siteOrigin}/events/${event.id}/join` : undefined, availability: "InStock" }
+    : undefined,
+});
 
 /** JSON-LD: パンくず */
 const breadcrumbLd = {
@@ -122,28 +115,27 @@ const breadcrumbLd = {
       "@type": "ListItem",
       "position": 1,
       "name": "Home",
-      ...(siteUrl ? { "item": siteUrl } : {})
+      ...(siteOrigin ? { "item": siteOrigin } : {})
     },
     {
       "@type": "ListItem",
       "position": 2,
       "name": "Events",
-      ...(siteUrl ? { "item": `${siteUrl}/events` } : {})
+      ...(siteOrigin ? { "item": `${siteOrigin}/events` } : {})
     },
     {
       "@type": "ListItem",
       "position": 3,
       "name": event.title,
-      ...(siteUrl ? { "item": `${siteUrl}/events/${event.id}` } : {})
+      ...(siteOrigin ? { "item": `${siteOrigin}/events/${event.id}` } : {})
     }
   ]
 };
 ---
 
-<BaseLayout title={pageTitle} lang="ja" meta_description={pageDesc}>
+<BaseLayout title={pageTitle} lang="ja" description={pageDesc}>
   <!-- JSON-LD: Event / Breadcrumb -->
-  <script type="application/ld+json">{JSON.stringify(eventLd)}</script>
-  <script type="application/ld+json">{JSON.stringify(breadcrumbLd)}</script>
+  <JsonLd data={[schemaEvent, breadcrumbLd]} />
 
   <section class="max-w-5xl mx-auto px-4 py-8 md:py-12">
     <!-- タイトル / メタ -->
