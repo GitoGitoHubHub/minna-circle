@@ -1,8 +1,9 @@
-// astro.config.mjs
-import { defineConfig } from "astro/config";
-import vercel from "@astrojs/vercel";
+import { defineConfig } from 'astro/config';
+
+// ★ 本番ドメインに置き換えてください（例）
+const SITE = process.env.SITE || 'https://minnacircle.example.com';
 
 export default defineConfig({
-  output: "server",
-  adapter: vercel(),
+  site: SITE,
+  // 必要なら他の統合や設定をここに
 });
