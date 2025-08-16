@@ -10,23 +10,18 @@ const { circle } = Astro.props as {
     popularity?: number;
   };
 };
+const cover = circle.image || "/og.png";
 ---
 
 <a href={`/circles/${circle.id}`} class="block rounded-2xl border shadow hover:shadow-lg transition bg-white overflow-hidden">
-  <!-- 固定高さサムネイル（インラインstyleで確実に固定） -->
-  <div class="relative w-full overflow-hidden" style="height:96px">
-    <img
-      src={circle.image || "/og.png"}
-      alt={circle.name}
-      class="absolute inset-0 w-full h-full object-cover"
-      loading="lazy"
-      decoding="async"
-    />
-  </div>
-
+  <!-- 背景画像サムネ（img不使用 → グローバルCSSの影響を回避） -->
+  <div
+    class="w-full h-24 bg-cover bg-center"
+    style={`background-image:url('${cover}');`}
+  />
   <div class="p-4 space-y-2">
-    <h3 class="text-lg font-bold">{circle.name}</h3>
-    {circle.intro && <p class="text-sm text-gray-600">{circle.intro}</p>}
+    <h3 class="text-lg font-bold line-clamp-2">{circle.name}</h3>
+    {circle.intro && <p class="text-sm text-gray-600 line-clamp-2">{circle.intro}</p>}
     {typeof circle.memberCount === "number" && (
       <p class="text-xs text-gray-500">メンバー数: {circle.memberCount}</p>
     )}
