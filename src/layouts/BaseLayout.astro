@@ -1,34 +1,80 @@
 ---
-import { AstroHead } from "astro";
+/**
+ * BaseLayout
+ * - 既存の canonical / meta / OG 設定を維持
+ * - Organization の JSON-LD を恒常出力（SEO強化）
+ *
+ * Props:
+ *  - title?: string
+ *  - description?: string
+ *  - lang?: string ("ja" | "en" など) デフォルト: "ja"
+ *  - image?: string  og:image 絶対URL推奨（未指定時は /og.png を使用）
+ *
+ * 注意: このレイアウトを使用する全ページに Organization スキーマが出力されます。
+ */
+import JsonLd from "../components/JsonLd.astro";
+import { buildOrganization } from "../lib/schema";
+
+const {
+  title = "MinnaCircle",
+  description = "サークル・イベントの検索と参加ができるコミュニティプラットフォーム。",
+  lang = "ja",
+  image,
+} = Astro.props;
+
+// サイトのオリジン（astro.configでsite設定がある場合は Astro.site が入る）
+const origin = (Astro.site ? String(Astro.site) : Astro.url.origin) ?? "";
+const url = new URL(Astro.url.pathname + Astro.url.search, origin).toString();
+
+// og:image は props.image 優先、なければ /og.png を既定
+const ogImage = image ?? (origin ? `${origin}/og.png` : "/og.png");
+
+// Organization スキーマ（必要に応じて sameAs を追加）
+const orgSchema = buildOrganization({
+  name: "MinnaCircle",
+  url: origin || url,
+  logo: origin ? `${origin}/og.png` : undefined,
+  sameAs: [
+    // "https://x.com/your_account",
+    // "https://www.instagram.com/your_account"
+  ],
+});
 ---
 
-<html lang={Astro.props.lang || "ja"}>
+<html lang={lang}>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{Astro.props.title}</title>
-    <meta name="description" content={Astro.props.description} />
-    <link rel="canonical" href={`https://minna-circle.vercel.app${Astro.props.path}`} />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <!-- Favicon & OGP -->
+    <title>{title}</title>
+    <meta name="description" content={description} />
+
+    <!-- Canonical -->
+    <link rel="canonical" href={url} />
+
+    <!-- Favicon / App Icons（既存の設置を想定） -->
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <link rel="apple-touch-icon" href="/og.png" />
-    <meta property="og:image" content="/og.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 
-    <!-- Organization schema.org JSON-LD -->
-    <script type="application/ld+json">
-      {JSON.stringify({
-        "@context": "https://schema.org",
-        "@type": "Organization",
-        "name": "MinnaCircle",
-        "url": "https://minna-circle.vercel.app",
-        "logo": "https://minna-circle.vercel.app/og.png",
-        "sameAs": []
-      })}
-    </script>
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="MinnaCircle" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={url} />
+    <meta property="og:image" content={ogImage} />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+
+    <!-- JSON-LD: Organization（全ページ共通） -->
+    <JsonLd data={orgSchema} />
   </head>
-  <body class="font-sans antialiased">
+  <body class="min-h-screen antialiased text-gray-900">
     <slot />
   </body>
 </html>
