@@ -1,0 +1,178 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+
+/**
+ * ダミーイベント（/events/[id].astro と同一IDで参照）
+ * 実運用では API/DB から取得し、getStaticPaths に置換。
+ */
+const allEvents = [
+  { id:"ev-001", title:"朝活ランニング＠木場公園", image:"/og.png", dateText:"2025-09-01 07:00", placeText:"木場公園集合", areaText:"江東区", fee:0 },
+  { id:"ev-002", title:"週末バスケ個人参加",       image:"/og.png", dateText:"2025-09-06 18:00", placeText:"江東区スポセン", areaText:"江東区", fee:800 },
+  { id:"ev-003", title:"英会話ゆるカフェ会",       image:"/og.png", dateText:"2025-09-07 10:00", placeText:"清澄白河", areaText:"江東区", fee:500 }
+];
+
+const { id } = Astro.params;
+const ev = allEvents.find(e => e.id === id);
+if (!ev) {
+  throw Astro.redirect("/404");
+}
+
+const title = `参加申し込み | ${ev.title} | MinnaCircle`;
+const description = `${ev.title} に参加申し込み。開催: ${ev.dateText} / 会場: ${ev.placeText}（${ev.areaText}）`;
+
+/** site URL（astro.configのsiteがあれば使用） */
+const siteUrl = (Astro.site && Astro.site.href) ? Astro.site.href.replace(/\/$/, "") : "";
+
+/** JSON-LD（RegisterAction）: 検索エンジン向けに申し込みアクションを明示 */
+const registerActionLd = {
+  "@context": "https://schema.org",
+  "@type": "RegisterAction",
+  "name": `Register for ${ev.title}`,
+  "target": siteUrl ? `${siteUrl}/events/${ev.id}/join` : undefined,
+  "event": {
+    "@type": "Event",
+    "name": ev.title,
+    "startDate": ev.dateText,
+    "location": { "@type":"Place", "name": ev.placeText }
+  },
+  "instrument": { "@type":"WebSite", "name":"MinnaCircle" }
+};
+---
+
+<BaseLayout title={title} lang="ja" meta_description={description}>
+  <script type="application/ld+json">{JSON.stringify(registerActionLd)}</script>
+
+  <section class="max-w-3xl mx-auto px-4 py-8 md:py-12">
+    <!-- ヘッダー -->
+    <nav class="text-xs text-gray-500 mb-2">
+      <a class="hover:underline" href="/">Home</a> /
+      <a class="hover:underline" href="/events">Events</a> /
+      <a class="hover:underline" href={`/events/${ev.id}`}>{ev.title}</a> /
+      <span>Join</span>
+    </nav>
+
+    <header class="mb-6">
+      <h1 class="text-2xl md:text-3xl font-extrabold">参加申し込み</h1>
+      <p class="text-gray-600 mt-1">
+        対象イベント：<span class="font-semibold">{ev.title}</span><br />
+        開催日時：{ev.dateText} ／ 会場：{ev.placeText}（{ev.areaText}） ／ 参加費：{ev.fee === 0 ? "無料" : `¥${ev.fee.toLocaleString()}`}
+      </p>
+    </header>
+
+    <!-- 完了メッセージ（デモ） -->
+    <div id="join-success" class="hidden bg-green-50 border border-green-200 text-green-800 rounded-xl p-4 mb-6">
+      お申し込みを受け付けました。（デモ動作）<br />
+      ※本番ではスプレッドシート保存・主催者通知・確認メール送信を行います。
+    </div>
+
+    <!-- 申し込みフォーム（デモ送信） -->
+    <form id="join-form" class="bg-white rounded-2xl shadow p-6 md:p-8 space-y-5" novalidate>
+      <!-- スパム対策（ハニーポット） -->
+      <input type="text" name="company" class="hidden" tabindex="-1" autocomplete="off" />
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label for="name" class="block text-sm font-medium mb-1">お名前 <span class="text-red-600">*</span></label>
+          <input id="name" name="name" type="text" required maxlength="80" class="w-full rounded-xl border px-4 py-2" placeholder="山田 太郎" />
+        </div>
+        <div>
+          <label for="email" class="block text-sm font-medium mb-1">メールアドレス <span class="text-red-600">*</span></label>
+          <input id="email" name="email" type="email" required maxlength="120" class="w-full rounded-xl border px-4 py-2" placeholder="you@example.com" />
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label for="count" class="block text-sm font-medium mb-1">参加人数 <span class="text-red-600">*</span></label>
+          <input id="count" name="count" type="number" min="1" max="10" value="1" required class="w-full rounded-xl border px-4 py-2" />
+        </div>
+        <div>
+          <label for="lang" class="block text-sm font-medium mb-1">連絡希望言語</label>
+          <select id="lang" name="lang" class="w-full rounded-xl border px-3 py-2">
+            <option value="ja" selected>日本語</option>
+            <option value="en">English</option>
+            <option value="zh">中文</option>
+          </select>
+        </div>
+        <div>
+          <label for="agree" class="block text-sm font-medium mb-1">同意 <span class="text-red-600">*</span></label>
+          <div class="flex items-start gap-2">
+            <input id="agree" name="agree" type="checkbox" required class="mt-1" />
+            <span class="text-sm text-gray-700">
+              キャンセル規定・利用規約・個人情報の取り扱いに同意します（上限は参加費100%）。
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <label for="note" class="block text-sm font-medium mb-1">特記事項（任意・全角50文字）</label>
+        <textarea id="note" name="note" rows="3" maxlength="50" class="w-full rounded-xl border px-4 py-2" placeholder="アレルギー／遅刻の可能性など、配慮が必要な点があればご記入ください。"></textarea>
+        <p class="text-xs text-gray-500 mt-1"><span id="note-count">0</span> / 50</p>
+      </div>
+
+      <input type="hidden" name="eventId" value={ev.id} />
+      <input type="hidden" name="eventTitle" value={ev.title} />
+
+      <div class="flex gap-3 pt-2">
+        <button type="submit" class="bg-indigo-600 text-white px-5 py-2 rounded-xl shadow hover:bg-indigo-700 transition">申し込む</button>
+        <button type="reset" class="px-5 py-2 rounded-xl border hover:bg-gray-50 transition">クリア</button>
+        <a href={`/events/${ev.id}`} class="ml-auto text-indigo-600 text-sm hover:underline">イベント詳細に戻る</a>
+      </div>
+    </form>
+
+    <section class="mt-8 bg-indigo-50 rounded-2xl p-6">
+      <h2 class="text-lg md:text-xl font-bold mb-2">補足</h2>
+      <ul class="list-disc pl-6 text-sm text-gray-700 space-y-1">
+        <li>未成年の方は保護者の同意が必要です。</li>
+        <li>体調不良時は無理せず参加をご検討ください。</li>
+        <li>主催者都合で中止の場合は参加費は全額返金されます（デモ表記）。</li>
+      </ul>
+    </section>
+  </section>
+
+  <!-- 最小限クライアントスクリプト（デモ送信 & 文字数カウント） -->
+  <script>
+    // 特記事項カウンタ
+    (function () {
+      const note = document.getElementById('note');
+      const counter = document.getElementById('note-count');
+      if (!note || !counter) return;
+      const update = () => counter.textContent = (note.value.length || 0).toString();
+      note.addEventListener('input', update);
+      update();
+    })();
+
+    // デモ送信（Apps Script / API へ差し替え想定）
+    (function () {
+      const form = document.getElementById('join-form');
+      const success = document.getElementById('join-success');
+      if (!form) return;
+
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const data = new FormData(form);
+        // ハニーポット
+        if ((data.get('company') || '').toString().trim() !== "") return;
+
+        // 必須チェック
+        if (!data.get('name') || !data.get('email') || !data.get('count') || !data.get('agree')) {
+          alert('必須項目を入力してください。');
+          return;
+        }
+        const count = Number(data.get('count'));
+        if (!Number.isFinite(count) || count < 1 || count > 10) {
+          alert('参加人数は 1〜10 の範囲で入力してください。');
+          return;
+        }
+
+        // 成功表示（デモ）
+        success?.classList.remove('hidden');
+        form.reset();
+        const noteCounter = document.getElementById('note-count');
+        if (noteCounter) noteCounter.textContent = "0";
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    })();
+  </script>
+</BaseLayout>
