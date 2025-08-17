@@ -1,177 +1,61 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
+import "../styles/util.css";
 import EventCard from "../components/EventCard.astro";
-import CircleCard from "../components/CircleCard.astro";
-import JsonLd from "../components/JsonLd.astro";
-import { buildOrganization, buildEvent, buildPlace } from "../lib/schema";
 
-/** ▼ ダミーデータ（本番ではAPI/サーバデータに差し替え） */
-const featuredEvents = [
+/** ダミーデータ：実装時はAPI/DBへ */
+const events = [
   {
-    id: "ev-001",
-    title: "朝活ランニング＠木場公園",
-    description: "初心者歓迎。会話しながら軽く3km！",
-    image: "/og.png",
-    dateText: "2025-09-01 07:00",
-    placeText: "木場公園集合",
-    isFeatured: true
+    id: "e1",
+    title: "初めてのバスケ体験会（初心者歓迎）",
+    date: "2025/09/01 18:00",
+    place: "江東区スポーツセンター",
+    href: "/events/e1",
+    img: { src: "/images/events/e1.jpg", alt: "バスケ体験会", eager: true } // LCP対象
   },
   {
-    id: "ev-002",
-    title: "週末バスケ個人参加",
-    description: "経験不問。楽しく汗をかきましょう！",
-    image: "/og.png",
-    dateText: "2025-09-06 18:00",
-    placeText: "江東区スポセン",
-    isFeatured: false
+    id: "e2",
+    title: "英語でボードゲーム交流ナイト",
+    date: "2025/09/03 19:30",
+    place: "清澄白河",
+    href: "/events/e2",
+    img: { src: "/images/events/e2.jpg", alt: "ボードゲームナイト" }
   },
   {
-    id: "ev-003",
-    title: "英会話ゆるカフェ会",
-    description: "カジュアルに英会話。お子様連れOK。",
-    image: "/og.png",
-    dateText: "2025-09-07 10:00",
-    placeText: "清澄白河",
-    isFeatured: false
-  }
+    id: "e3",
+    title: "皇居ラン朝活 5km",
+    date: "2025/09/05 06:30",
+    place: "竹橋駅集合",
+    href: "/events/e3",
+    img: { src: "/images/events/e3.jpg", alt: "皇居ラン" }
+  },
+  {
+    id: "e4",
+    title: "親子で科学実験ワークショップ",
+    date: "2025/09/07 10:00",
+    place: "お台場",
+    href: "/events/e4",
+    img: { src: "/images/events/e4.jpg", alt: "科学ワークショップ" }
+  },
 ];
-
-const featuredCircles = [
-  {
-    id: "cl-001",
-    name: "ミンナでバスケ",
-    intro: "初心者～経験者まで幅広く。試合より交流重視！",
-    image: "/og.png",
-    memberCount: 42,
-    areaText: "江東区・墨田区",
-    isPickup: true
-  },
-  {
-    id: "cl-002",
-    name: "清澄コーヒー巡り部",
-    intro: "週一でコーヒー店を探訪。豆知識交換しましょう。",
-    image: "/og.png",
-    memberCount: 18,
-    areaText: "清澄白河・門前仲町",
-    isPickup: false
-  },
-  {
-    id: "cl-003",
-    name: "親子で外遊び",
-    intro: "小さなお子さん歓迎。水遊び・公園ピクニックなど。",
-    image: "/og.png",
-    memberCount: 27,
-    areaText: "東陽町・有明",
-    isPickup: false
-  }
-];
-
-/** ▼ URL/ISO 変換ユーティリティ（astro.config.mjs の site が前提） */
-const siteOrigin = (Astro.site && Astro.site.href) ? Astro.site.href.replace(/\/$/, "") : "";
-const toJstIso = (s: string) => {
-  const [date, hm] = s.split(" ");
-  return `${date}T${hm}:00+09:00`;
-};
-
-/** ▼ JSON-LD（構造化データ） */
-const orgLd = buildOrganization({
-  name: "MinnaCircle",
-  url: siteOrigin || undefined,
-  logo: siteOrigin ? `${siteOrigin}/og.png` : undefined,
-});
-
-const webSiteLd = {
-  "@context": "https://schema.org",
-  "@type": "WebSite",
-  "name": "MinnaCircle",
-  ...(siteOrigin ? { "url": siteOrigin } : {}),
-  ...(siteOrigin ? {
-    "potentialAction": {
-      "@type": "SearchAction",
-      "target": `${siteOrigin}/search?q={query}`,
-      "query-input": "required name=query"
-    }
-  } : {})
-};
-
-/** Eventスキーマ（絶対URLの image / url を付与） */
-const eventsLd = featuredEvents.map((ev) => {
-  const detailUrl = siteOrigin ? `${siteOrigin}/events/${ev.id}` : undefined;
-  const absoluteImage = siteOrigin ? `${siteOrigin}${ev.image}` : ev.image;
-  return {
-    ...buildEvent({
-      name: ev.title,
-      description: ev.description,
-      startDate: toJstIso(ev.dateText),
-      image: [absoluteImage],
-      location: buildPlace({ name: ev.placeText }),
-      organizer: orgLd,
-    }),
-    ...(detailUrl ? { url: detailUrl } : {})
-  };
-});
 ---
 
-<BaseLayout title="MinnaCircle | みんなのためのサークル募集・検索" lang="ja">
-  <!-- JSON-LD（Organization / WebSite / 注目Event群） -->
-  <JsonLd data={[orgLd, webSiteLd, ...eventsLd]} />
+<BaseLayout title="MinnaCircle | みんなで、つながる。" lang="ja">
+  <section class="max-w-6xl mx-auto px-4 py-10 md:py-14">
+    <h1 class="text-2xl md:text-3xl font-extrabold mb-2">MinnaCircle</h1>
+    <p class="text-gray-600 mb-6">趣味・サークルで自然につながる。まずは気になるイベントから。</p>
 
-  <!-- Hero（検索フォーム付き） -->
-  <section class="max-w-6xl mx-auto px-4 py-8 md:py-12">
-    <div class="bg-indigo-50 rounded-2xl p-6 md:p-10">
-      <h1 class="text-2xl md:text-4xl font-extrabold mb-3">趣味でつながる、みんなのサークル</h1>
-      <p class="text-gray-700 md:text-lg">近くのサークルやイベントを検索して、気軽に参加しよう。</p>
-
-      <!-- 検索フォーム（GET /search） -->
-      <form action="/search" method="get" class="mt-6 grid grid-cols-1 md:grid-cols-[1fr_180px_auto] gap-2 items-center">
-        <label class="sr-only" for="q">キーワード</label>
-        <input
-          id="q"
-          name="q"
-          type="search"
-          placeholder="例）バスケ / 英会話 / 清澄白河"
-          class="w-full rounded-xl border px-4 py-2"
+    <!-- 画像を小さく“1/8相当”で見やすく一覧：auto-fillで小さめカードを敷き詰め -->
+    <div class="grid-wrap">
+      {events.map((ev) => (
+        <EventCard
+          title={ev.title}
+          date={ev.date}
+          place={ev.place}
+          href={ev.href}
+          img={ev.img}
         />
-
-        <label class="sr-only" for="type">種別</label>
-        <select id="type" name="type" class="rounded-xl border px-3 py-2">
-          <option value="all" selected>すべて</option>
-          <option value="event">イベント</option>
-          <option value="circle">サークル</option>
-        </select>
-
-        <button type="submit" class="rounded-xl bg-indigo-600 text-white px-5 py-2 shadow hover:bg-indigo-700 transition">
-          検索
-        </button>
-      </form>
-
-      <div class="mt-4 flex gap-3">
-        <a href="/search" class="bg-white text-indigo-700 px-5 py-2 rounded-xl shadow hover:bg-gray-50 transition text-sm md:text-base">詳細検索へ</a>
-        <a href="/vendor/new" class="text-indigo-700 font-semibold hover:underline text-sm md:text-base">サークルを作成</a>
-      </div>
-    </div>
-  </section>
-
-  <!-- 注目イベント -->
-  <section class="max-w-6xl mx-auto px-4 py-6">
-    <div class="flex items-baseline justify-between mb-4">
-      <h2 class="text-xl md:text-2xl font-bold">注目イベント</h2>
-      <a href="/events" class="text-indigo-600 text-sm hover:underline">すべて見る</a>
-    </div>
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-      {featuredEvents.map(ev => (<EventCard event={ev} />))}
-    </div>
-  </section>
-
-  <!-- ピックアップサークル -->
-  <section class="max-w-6xl mx-auto px-4 py-6">
-    <div class="flex items-baseline justify-between mb-4">
-      <h2 class="text-xl md:text-2xl font-bold">ピックアップサークル</h2>
-      <a href="/circles" class="text-indigo-600 text-sm hover:underline">すべて見る</a>
-    </div>
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-      {featuredCircles.map(cl => (<CircleCard circle={cl} />))}
+      ))}
     </div>
   </section>
 </BaseLayout>
-
