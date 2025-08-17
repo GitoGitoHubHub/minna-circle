@@ -1,14 +1,16 @@
 ---
 /**
- * 汎用 JSON-LD 埋め込みコンポーネント
- * 使用例:
- *   <JsonLd data={someSchemaObject} />
- *   <JsonLd data={[schema1, schema2]} />
+ * <JsonLd data={object | object[]}>
+ * - data が配列なら複数の <script> を出力
+ * - set:html で JSON をそのまま埋め込む（エスケープ禁止）
  */
-const { data } = Astro.props as { data: any | any[] };
-const payload = Array.isArray(data) ? data : [data];
-const json = JSON.stringify(payload.length === 1 ? payload[0] : payload);
+const { data } = Astro.props;
+const items = Array.isArray(data) ? data : [data];
+
+// JSON を最小化して埋め込む（改行やスペースは不要）
+const toJson = (obj: any) => JSON.stringify(obj);
 ---
-<script type="application/ld+json">
-  {json}
-</script>
+
+{items.filter(Boolean).map((item) => (
+  <script type="application/ld+json" set:html={toJson(item)}></script>
+))}
