@@ -1,60 +1,28 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
-import "../styles/util.css";
 import EventCard from "../components/EventCard.astro";
 
-/** ダミーデータ：実装時はAPI/DBへ */
+/** ダミーデータ：実装時はAPI/DBへ差し替え */
 const events = [
-  {
-    id: "e1",
-    title: "初めてのバスケ体験会（初心者歓迎）",
-    date: "2025/09/01 18:00",
-    place: "江東区スポーツセンター",
-    href: "/events/e1",
-    img: { src: "/images/events/e1.jpg", alt: "バスケ体験会", eager: true } // LCP対象
-  },
-  {
-    id: "e2",
-    title: "英語でボードゲーム交流ナイト",
-    date: "2025/09/03 19:30",
-    place: "清澄白河",
-    href: "/events/e2",
-    img: { src: "/images/events/e2.jpg", alt: "ボードゲームナイト" }
-  },
-  {
-    id: "e3",
-    title: "皇居ラン朝活 5km",
-    date: "2025/09/05 06:30",
-    place: "竹橋駅集合",
-    href: "/events/e3",
-    img: { src: "/images/events/e3.jpg", alt: "皇居ラン" }
-  },
-  {
-    id: "e4",
-    title: "親子で科学実験ワークショップ",
-    date: "2025/09/07 10:00",
-    place: "お台場",
-    href: "/events/e4",
-    img: { src: "/images/events/e4.jpg", alt: "科学ワークショップ" }
-  },
+  { id: "e1", title: "初めてのバスケ体験会（初心者歓迎）", dateText: "2025/09/01 18:00", placeText: "江東区スポーツセンター", image: "/images/events/e1.jpg" },
+  { id: "e2", title: "英語でボードゲーム交流ナイト",         dateText: "2025/09/03 19:30", placeText: "清澄白河",             image: "/images/events/e2.jpg" },
+  { id: "e3", title: "皇居ラン朝活 5km",                     dateText: "2025/09/05 06:30", placeText: "竹橋駅集合",           image: "/images/events/e3.jpg" },
+  { id: "e4", title: "親子で科学実験ワークショップ",         dateText: "2025/09/07 10:00", placeText: "お台場",               image: "/images/events/e4.jpg" },
+  { id: "e5", title: "はじめての写真ウォーク",               dateText: "2025/09/08 13:00", placeText: "清澄庭園",             image: "/images/events/e5.jpg" },
+  { id: "e6", title: "テニスゆる練",                         dateText: "2025/09/09 18:30", placeText: "猿江恩賜公園",         image: "/images/events/e6.jpg" },
 ];
 ---
 
 <BaseLayout title="MinnaCircle | みんなで、つながる。" lang="ja">
-  <section class="max-w-6xl mx-auto px-4 py-10 md:py-14">
+  <section class="max-w-7xl mx-auto px-4 py-10 md:py-14">
     <h1 class="text-2xl md:text-3xl font-extrabold mb-2">MinnaCircle</h1>
     <p class="text-gray-600 mb-6">趣味・サークルで自然につながる。まずは気になるイベントから。</p>
 
-    <!-- 画像を小さく“1/8相当”で見やすく一覧：auto-fillで小さめカードを敷き詰め -->
-    <div class="grid-wrap">
-      {events.map((ev) => (
-        <EventCard
-          title={ev.title}
-          date={ev.date}
-          place={ev.place}
-          href={ev.href}
-          img={ev.img}
-        />
+    <!-- レスポンシブ・グリッド（右側に余白が溜まらない） -->
+    <div class="grid gap-4 sm:gap-5
+                grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+      {events.map((event, i) => (
+        <EventCard event={event} eager={i === 0} />
       ))}
     </div>
   </section>
