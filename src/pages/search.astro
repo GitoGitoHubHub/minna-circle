@@ -312,8 +312,8 @@ const withQS = (patch: Record<string,string>) => {
         <span class="text-sm text-gray-500">件数: {events.length}</span>
       </div>
       {events.length > 0 ? (
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {events.map(ev => (<EventCard event={ev} />))}
+        <div class="grid gap-4 sm:gap-5 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          {events.map((ev, i) => (<EventCard event=\{ev\} eager={i === 0} />))}
         </div>
       ) : (
         <p class="text-gray-500 text-sm">該当するイベントが見つかりませんでした。</p>
@@ -329,7 +329,7 @@ const withQS = (patch: Record<string,string>) => {
         <span class="text-sm text-gray-500">件数: {circles.length}</span>
       </div>
       {circles.length > 0 ? (
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div class="grid gap-4 sm:gap-5 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {circles.map(cl => (<CircleCard circle={cl} />))}
         </div>
       ) : (
