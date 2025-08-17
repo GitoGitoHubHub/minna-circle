@@ -1,9 +1,10 @@
 import { defineConfig } from 'astro/config';
 
-// SITE は Vercel 環境変数から。ローカルでも .env で補えます。
+// 本番URLをVercelの環境変数 SITE で入れる（未設定時はデプロイURLに合わせる）
 const SITE = process.env.SITE || 'https://minnacircle.vercel.app';
 
 export default defineConfig({
-  site: SITE,          // ★ これで Astro は静的出力に必要な完全URLを把握
-  output: 'static',    // 明示しておくと安全
+  site: SITE,
+  output: 'static',   // ★ これで静的固定
+  // integrations: [] // SSR系のインテグレーションは入れない
 });
