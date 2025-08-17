@@ -1,5 +1,11 @@
 ---
-const { event } = Astro.props as {
+/**
+ * 後方互換: これまで通り { event } のみでOK。
+ * 追加機能:
+ *  - eager?: boolean … 先頭カードなどLCP対象に
+ *  - thumbWidth/thumbHeight … CLS抑制のための固定サイズ（デフォ120x80）
+ */
+const { event, eager = false, thumbWidth = 120, thumbHeight = 80 } = Astro.props as {
   event: {
     id: string;
     title: string;
@@ -11,30 +17,59 @@ const { event } = Astro.props as {
     fee?: number;
     popularity?: number;
   };
+  eager?: boolean;
+  thumbWidth?: number;
+  thumbHeight?: number;
 };
+
 const cover = event.image || "/og.png";
+
+// 先読み/LCP用属性
+const loadingAttr = eager ? "eager" : "lazy";
+const decodingAttr = eager ? "sync" : "async";
+const fetchPriority = eager ? "high" : "auto";
+
+// 通貨表記フォールバック: toLocaleString未対応でも崩れないように
+const formatYen = (v: number) => {
+  try { return new Intl.NumberFormat("ja-JP").format(v); }
+  catch { return (v?.toString?.() ?? `${v}`); }
+};
 ---
 
-<a href={`/events/${event.id}`} class="block rounded-2xl border shadow hover:shadow-lg transition bg-white overflow-hidden">
+<a
+  href={`/events/${event.id}`}
+  class="block rounded-2xl border shadow hover:shadow-lg transition bg-white overflow-hidden"
+  aria-label={`${event.title} の詳細へ`}
+>
   <div class="p-4">
     <div class="flex items-start gap-4">
       <!-- 小型サムネ（横並び左側） -->
       <img
         src={cover}
         alt={event.title}
-        loading="lazy"
-        decoding="async"
-        style="width:120px !important;height:80px !important;object-fit:cover !important;object-position:center;border-radius:10px;display:block;"
+        loading={loadingAttr}
+        decoding={decodingAttr}
+        fetchpriority={fetchPriority}
+        width={thumbWidth}
+        height={thumbHeight}
+        style="width:120px;height:80px;object-fit:cover;object-position:center;border-radius:10px;display:block;"
       />
 
       <!-- 右側テキスト -->
       <div class="min-w-0 flex-1">
         <h3 class="text-base md:text-lg font-bold leading-snug line-clamp-2">{event.title}</h3>
         {event.description && <p class="mt-1 text-sm text-gray-600 line-clamp-2">{event.description}</p>}
+
         <div class="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-500">
-          {(event.dateText || event.placeText) && <span>{event.dateText || ""}{event.placeText ? ` @ ${event.placeText}` : ""}</span>}
+          {(event.dateText || event.placeText) && (
+            <span>
+              {event.dateText || ""}{event.placeText ? ` @ ${event.placeText}` : ""}
+            </span>
+          )}
           {event.areaText && <span>エリア: {event.areaText}</span>}
-          {typeof event.fee === "number" && <span>参加費: {event.fee === 0 ? "無料" : `¥${event.fee.toLocaleString?.() || event.fee}`}</span>}
+          {typeof event.fee === "number" && (
+            <span>参加費: {event.fee === 0 ? "無料" : `¥${formatYen(event.fee)}`}</span>
+          )}
           {typeof event.popularity === "number" && <span>人気度: {event.popularity}</span>}
         </div>
       </div>
