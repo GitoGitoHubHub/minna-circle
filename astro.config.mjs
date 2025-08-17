@@ -1,17 +1,20 @@
 import { defineConfig } from "astro/config";
 import sitemap from "@astrojs/sitemap";
+import vercel from "@astrojs/vercel/serverless"; // ★ Vercel アダプタ（サーバーレス）
 
 export default defineConfig({
-  // 本番URL（必要ならあとで独自ドメインに変更可）
+  // 公開URL（独自ドメイン導入時はここを変更）
   site: "https://minna-circle.vercel.app",
 
-  // ★ここが重要：静的出力。adapterは不要（NoAdapterInstalledの回避）
-  output: "static",
+  // ★ サーバー出力に変更（SSR要素があってもOK）
+  output: "server",
 
-  // 追加の統合（sitemap 自動生成）
+  // Vercel 用アダプタを有効化
+  adapter: vercel(),
+
+  // そのまま sitemap 自動生成（除外は必要に応じて調整）
   integrations: [
     sitemap({
-      // インデックスさせないURL（必要に応じて調整）
       exclude: ["/404", "/search", "/vendor/new", "/api/**"],
     }),
   ],
