@@ -1,4 +1,16 @@
 ---
+/**
+ * BaseLayout
+ * - canonical / meta / OG
+ * - Organization の JSON-LD を恒常出力（sameAs/絶対ロゴ対応）
+ * - Google Search Console 所有権確認 meta を出力
+ *
+ * Props:
+ *  - title?: string
+ *  - description?: string
+ *  - lang?: string ("ja" | "en" など) デフォルト: "ja"
+ *  - image?: string  og:image 絶対URL推奨（未指定時は /og.png を使用）
+ */
 import JsonLd from "../components/JsonLd.astro";
 import { buildOrganization } from "../lib/schema";
 
@@ -9,21 +21,23 @@ const {
   image,
 } = Astro.props;
 
-// ★ origin は Astro.site のみ参照（SSR前提の origin フォールバックを排除）
+// origin は Astro.site のみ参照（SSR前提のフォールバックは使わない）
 const origin = Astro.site ? String(Astro.site).replace(/\/$/, "") : "";
 
-// パスは Astro.url から取得してOK（静的でも解決される）
+// パスは Astro.url から取得
 const pathname = Astro.url.pathname + Astro.url.search;
 const canonical = origin ? origin + pathname : undefined;
 
 // og:image は絶対URLを優先。なければ /og.png を絶対化
 const ogImage = image ?? (origin ? `${origin}/og.png` : "/og.png");
 
+// Organization スキーマ（sameAs/ロゴは絶対URLに）
 const orgSchema = buildOrganization({
   name: "MinnaCircle",
   url: origin || undefined,
   logo: origin ? `${origin}/og.png` : undefined,
   sameAs: [
+    // 必要なものだけ残してください
     "https://x.com/your_account",
     "https://www.instagram.com/your_account",
   ].filter(Boolean),
@@ -34,15 +48,22 @@ const orgSchema = buildOrganization({
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+
     <title>{title}</title>
     <meta name="description" content={description} />
 
+    <!-- Google Search Console verification（★ここを差し替え） -->
+    <!-- Search Console で発行された content 値に置き換えてください -->
+    <meta name="google-site-verification" content="REPLACE_WITH_SEARCH_CONSOLE_TOKEN" />
+
     {canonical && <link rel="canonical" href={canonical} />}
 
+    <!-- Favicon / App Icons -->
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 
+    <!-- Open Graph -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="MinnaCircle" />
     <meta property="og:title" content={title} />
@@ -50,15 +71,16 @@ const orgSchema = buildOrganization({
     {canonical && <meta property="og:url" content={canonical} />}
     <meta property="og:image" content={ogImage} />
 
+    <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImage} />
 
+    <!-- JSON-LD: Organization（全ページ共通） -->
     <JsonLd data={orgSchema} />
   </head>
   <body class="min-h-screen antialiased text-gray-900">
     <slot />
   </body>
 </html>
-
