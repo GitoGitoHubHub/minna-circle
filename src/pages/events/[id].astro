@@ -58,20 +58,22 @@ const allEvents = [
   }
 ];
 
-/** 動的ルーティング用パラメータ */
-const { id } = Astro.params;
-
-/** 本来はAPI/DBから該当IDを取得 */
-const event = allEvents.find((e) => e.id === id);
-if (!event) {
-  throw Astro.redirect("/404");
+/** ★ 静的生成のためのパス列挙（SSR回避のキモ） */
+export async function getStaticPaths() {
+  return allEvents.map((e) => ({
+    params: { id: e.id },
+    props: { event: e },
+  }));
 }
+
+/** getStaticPaths で渡されたデータを受け取る */
+const { event } = Astro.props;
 
 /** メタ */
 const pageTitle = `${event.title} | MinnaCircle`;
 const pageDesc  = `${event.description}`;
 
-/** サイトOrigin（astro.configのsiteが設定されている場合に使用） */
+/** サイトURL（astro.configのsiteが設定されている場合に使用） */
 const siteOrigin = (Astro.site && Astro.site.href) ? Astro.site.href.replace(/\/$/, "") : "";
 
 /** "YYYY-MM-DD HH:mm" → "YYYY-MM-DDTHH:mm:00+09:00"（日本時間のまま出力） */
@@ -80,7 +82,7 @@ const toJstOffset = (s: string) => {
   return `${date}T${hm}:00+09:00`;
 };
 
-/** Organizer / Place / Event の JSON-LD（schema.ts を使用） */
+/** Organizer / Place / Event の JSON-LD */
 const organizer = buildOrganization({
   name: event.organizer,
   url: siteOrigin || undefined,
@@ -90,37 +92,44 @@ const place = buildPlace({
   name: event.placeText,
   addressLocality: event.areaText,
   addressCountry: "JP",
-  // latitude / longitude は実データ接続時に追加
 });
 
-// 画像・URLは絶対URL推奨
-const absoluteImage = siteOrigin ? `${siteOrigin}${event.image}` : event.image;
-const detailUrl = siteOrigin ? `${siteOrigin}/events/${event.id}` : undefined;
-
-const schemaEvent = {
-  ...buildEvent({
-    name: event.title,
-    description: event.description,
-    startDate: toJstOffset(event.dateText),
-    endDate: event.endText ? toJstOffset(event.endText) : undefined,
-    location: place,
-    organizer,
-    image: [absoluteImage],
-    offers: Number.isFinite(event.fee)
-      ? { price: String(event.fee), priceCurrency: "JPY", url: siteOrigin ? `${siteOrigin}/events/${event.id}/join` : undefined, availability: "InStock" }
-      : undefined,
-  }),
-  ...(detailUrl ? { url: detailUrl } : {}), // Event.url を付与
-};
+const schemaEvent = buildEvent({
+  name: event.title,
+  description: event.description,
+  startDate: toJstOffset(event.dateText),
+  endDate: event.endText ? toJstOffset(event.endText) : undefined,
+  location: place,
+  organizer,
+  image: [siteOrigin ? `${siteOrigin}${event.image}` : event.image],
+  offers: Number.isFinite(event.fee)
+    ? { price: String(event.fee), priceCurrency: "JPY", url: siteOrigin ? `${siteOrigin}/events/${event.id}/join` : undefined, availability: "InStock" }
+    : undefined,
+});
 
 /** JSON-LD: パンくず */
 const breadcrumbLd = {
   "@context": "https://schema.org",
   "@type": "BreadcrumbList",
   "itemListElement": [
-    { "@type": "ListItem", "position": 1, "name": "Home", ...(siteOrigin ? { "item": siteOrigin } : {}) },
-    { "@type": "ListItem", "position": 2, "name": "Events", ...(siteOrigin ? { "item": `${siteOrigin}/events` } : {}) },
-    { "@type": "ListItem", "position": 3, "name": event.title, ...(siteOrigin ? { "item": `${siteOrigin}/events/${event.id}` } : {}) }
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      ...(siteOrigin ? { "item": siteOrigin } : {})
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Events",
+      ...(siteOrigin ? { "item": `${siteOrigin}/events` } : {})
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": event.title,
+      ...(siteOrigin ? { "item": `${siteOrigin}/events/${event.id}` } : {})
+    }
   ]
 };
 ---
@@ -193,4 +202,3 @@ const breadcrumbLd = {
     </div>
   </section>
 </BaseLayout>
-
