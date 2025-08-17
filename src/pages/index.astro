@@ -66,7 +66,7 @@ const featuredCircles = [
   }
 ];
 
-/** ▼ URL/ISO 変換ユーティリティ */
+/** ▼ URL/ISO 変換ユーティリティ（astro.config.mjs の site が前提） */
 const siteOrigin = (Astro.site && Astro.site.href) ? Astro.site.href.replace(/\/$/, "") : "";
 const toJstIso = (s: string) => {
   const [date, hm] = s.split(" ");
@@ -94,18 +94,22 @@ const webSiteLd = {
   } : {})
 };
 
-/** Eventスキーマ（ダミー配列から生成・JST ISOで出力） */
-const eventsLd = featuredEvents.map((ev) =>
-  buildEvent({
-    name: ev.title,
-    description: ev.description,
-    startDate: toJstIso(ev.dateText),
-    image: [ev.image],
-    location: buildPlace({ name: ev.placeText }),
-    organizer: orgLd,
-    // 価格などはトップでは省略（詳細ページで offers を付与）
-  })
-);
+/** Eventスキーマ（絶対URLの image / url を付与） */
+const eventsLd = featuredEvents.map((ev) => {
+  const detailUrl = siteOrigin ? `${siteOrigin}/events/${ev.id}` : undefined;
+  const absoluteImage = siteOrigin ? `${siteOrigin}${ev.image}` : ev.image;
+  return {
+    ...buildEvent({
+      name: ev.title,
+      description: ev.description,
+      startDate: toJstIso(ev.dateText),
+      image: [absoluteImage],
+      location: buildPlace({ name: ev.placeText }),
+      organizer: orgLd,
+    }),
+    ...(detailUrl ? { url: detailUrl } : {})
+  };
+});
 ---
 
 <BaseLayout title="MinnaCircle | みんなのためのサークル募集・検索" lang="ja">
@@ -170,3 +174,4 @@ const eventsLd = featuredEvents.map((ev) =>
     </div>
   </section>
 </BaseLayout>
+
