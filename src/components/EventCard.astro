@@ -1,55 +1,61 @@
 ---
 /**
- * 後方互換: これまで通り { event } のみでOK。
- * 追加機能:
- *  - eager?: boolean … 先頭カードなどLCP対象に
- *  - thumbWidth/thumbHeight … CLS抑制のための固定サイズ（デフォ120x80）
+ * Safety-first 版:
+ *  - TypeScript型注釈を排除（環境差での型解釈エラー回避）
+ *  - すべての参照にフォールバックを用意（event未定義でも落ちない）
+ *  - CLS抑制: width/heightを明示
+ *  - eager 省略時は lazy
+ *  - fetchpriority は一旦未使用（互換優先）
  */
-const { event, eager = false, thumbWidth = 120, thumbHeight = 80 } = Astro.props as {
-  event: {
-    id: string;
-    title: string;
-    description?: string;
-    image?: string;
-    dateText?: string;
-    placeText?: string;
-    areaText?: string;
-    fee?: number;
-    popularity?: number;
-  };
-  eager?: boolean;
-  thumbWidth?: number;
-  thumbHeight?: number;
+
+// props（未定義でも落ちないよう防御）
+const rawEvent = Astro.props?.event || {};
+const eager = !!Astro.props?.eager;
+const thumbWidth = Number(Astro.props?.thumbWidth ?? 120);
+const thumbHeight = Number(Astro.props?.thumbHeight ?? 80);
+
+// 参照用に安全なラッパを作成
+const ev = {
+  id: rawEvent.id ?? "",
+  title: rawEvent.title ?? "(タイトル未設定)",
+  description: rawEvent.description ?? "",
+  image: rawEvent.image ?? "/og.png",
+  dateText: rawEvent.dateText ?? "",
+  placeText: rawEvent.placeText ?? "",
+  areaText: rawEvent.areaText ?? "",
+  fee: typeof rawEvent.fee === "number" ? rawEvent.fee : null,
+  popularity: typeof rawEvent.popularity === "number" ? rawEvent.popularity : null,
 };
 
-const cover = event.image || "/og.png";
-
-// 先読み/LCP用属性
+// LCP用（先頭のみ eager に）
 const loadingAttr = eager ? "eager" : "lazy";
 const decodingAttr = eager ? "sync" : "async";
-const fetchPriority = eager ? "high" : "auto";
 
-// 通貨表記フォールバック: toLocaleString未対応でも崩れないように
-const formatYen = (v: number) => {
-  try { return new Intl.NumberFormat("ja-JP").format(v); }
-  catch { return (v?.toString?.() ?? `${v}`); }
+// シンプルな円表記（Intl未依存）
+const formatYen = (v) => {
+  if (typeof v !== "number" || !isFinite(v)) return "";
+  const s = Math.floor(v).toString();
+  return s.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 };
+
+// リンク先（id無しでも落ちないよう # へ）
+const href = ev.id ? `/events/${ev.id}` : "#";
+const cover = ev.image || "/og.png";
 ---
 
 <a
-  href={`/events/${event.id}`}
+  href={href}
   class="block rounded-2xl border shadow hover:shadow-lg transition bg-white overflow-hidden"
-  aria-label={`${event.title} の詳細へ`}
+  aria-label={`${ev.title} の詳細へ`}
 >
   <div class="p-4">
     <div class="flex items-start gap-4">
       <!-- 小型サムネ（横並び左側） -->
       <img
         src={cover}
-        alt={event.title}
+        alt={ev.title}
         loading={loadingAttr}
         decoding={decodingAttr}
-        fetchpriority={fetchPriority}
         width={thumbWidth}
         height={thumbHeight}
         style="width:120px;height:80px;object-fit:cover;object-position:center;border-radius:10px;display:block;"
@@ -57,20 +63,25 @@ const formatYen = (v: number) => {
 
       <!-- 右側テキスト -->
       <div class="min-w-0 flex-1">
-        <h3 class="text-base md:text-lg font-bold leading-snug line-clamp-2">{event.title}</h3>
-        {event.description && <p class="mt-1 text-sm text-gray-600 line-clamp-2">{event.description}</p>}
+        <h3 class="text-base md:text-lg font-bold leading-snug line-clamp-2">{ev.title}</h3>
+
+        {ev.description && (
+          <p class="mt-1 text-sm text-gray-600 line-clamp-2">{ev.description}</p>
+        )}
 
         <div class="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-500">
-          {(event.dateText || event.placeText) && (
+          {(ev.dateText || ev.placeText) && (
             <span>
-              {event.dateText || ""}{event.placeText ? ` @ ${event.placeText}` : ""}
+              {ev.dateText}{ev.placeText ? ` @ ${ev.placeText}` : ""}
             </span>
           )}
-          {event.areaText && <span>エリア: {event.areaText}</span>}
-          {typeof event.fee === "number" && (
-            <span>参加費: {event.fee === 0 ? "無料" : `¥${formatYen(event.fee)}`}</span>
+          {ev.areaText && <span>エリア: {ev.areaText}</span>}
+
+          {ev.fee !== null && (
+            <span>参加費: {ev.fee === 0 ? "無料" : `¥${formatYen(ev.fee)}`}</span>
           )}
-          {typeof event.popularity === "number" && <span>人気度: {event.popularity}</span>}
+
+          {ev.popularity !== null && <span>人気度: {ev.popularity}</span>}
         </div>
       </div>
     </div>
